@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
         navigation = (BottomNavigationView) findViewById(R.id.navigation);
 
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-        //模拟人手点击 
+        //模拟人手点击
         navigation.findViewById(R.id.navigation_home).performClick();
     }
 
@@ -121,8 +121,6 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main, menu);
-        // search item
-//        MenuItem searchItem = menu.findItem(R.id.action_search);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -213,6 +211,9 @@ public class MainActivity extends AppCompatActivity {
         Bitmap bitmap = BitmapFactory.decodeFileDescriptor(fileDescriptor);
 
         // TODO: 18-4-30 调分类的接口，分类。 
+
+
+
     }
 
     @Override
