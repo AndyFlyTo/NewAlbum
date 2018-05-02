@@ -17,7 +17,6 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
@@ -28,7 +27,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.chenchen.newapplication.BuildConfig;
@@ -69,14 +67,13 @@ public class MainActivity extends AppCompatActivity {
 
             switch (item.getItemId()) {
                 case R.id.navigation_home:
-                    Log.d("chen","navigation_home");
+
                     actionBar.setDisplayHomeAsUpEnabled(false);
                     actionBar.setTitle("文件夹");
                     transaction.replace(R.id.content, new AlbumFolderFragment());
                     transaction.commit();
                     return true;
                 case R.id.navigation_notifications:
-                    Log.d("chen","navigation_natifications");
                     actionBar.setDisplayHomeAsUpEnabled(false);
                     actionBar.setTitle("照片");
                     transaction.replace(R.id.content, new AlbumFragment());
@@ -92,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
 //    //隐藏所有Fragment
 //    private void hideAllFragment(android.app.FragmentTransaction fragmentTransaction){
 //        if(albumFolderFragment != null)fragmentTransaction.hide(albumFolderFragment);
-//        if(albumFragment != null)fragmentTransaction.hide(albumFragment);
+//        if(albumDetailFragment != null)fragmentTransaction.hide(albumDetailFragment);
 //    }
 
     @Override

@@ -17,10 +17,10 @@ public class MyDatabaseHelper extends SQLiteOpenHelper {
             + "url text,"
             +"tf_type text, "
             +"confidence text)";
-//    private static final String CREATE_ALBUM = "create table Album ("
-//            + "id integer primary key autoincrement, "
-//            + "album_name text, "
-//            + "show_image text)";      //这个是？？？  image uri
+    private static final String CREATE_ALBUM = "create table Album ("
+            + "id integer primary key autoincrement, "
+            + "album_name text, "
+            + "image text)";      //这个是？？？  image uri
 //    private static final String CREATE_TF_INFORMATION = "create table TFInformation ("
 //            + "id integer primary key autoincrement, "
 //            + "url text, "
@@ -42,7 +42,7 @@ public class MyDatabaseHelper extends SQLiteOpenHelper {
         Log.d("chen","database onCreate");
         try {
             db.execSQL(CREATE_ALBUM_PHOTOS);
-//            db.execSQL(CREATE_ALBUM);
+            db.execSQL(CREATE_ALBUM);
 //            db.execSQL(CREATE_TF_INFORMATION);
 //            db.execSQL(CREATE_SETTINGS);
             Toast.makeText(mContext, "Create succeeded", Toast.LENGTH_SHORT).show();

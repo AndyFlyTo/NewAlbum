@@ -1,9 +1,12 @@
 package com.example.chenchen.newapplication.album;
 
 import android.Manifest;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -12,6 +15,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -25,8 +29,11 @@ import com.example.chenchen.newapplication.album.Database.MyDatabaseOperator;
 import com.example.chenchen.newapplication.album.imageloader.ImageScanResult;
 import com.example.chenchen.newapplication.album.imageloader.ImageScannerModel;
 import com.example.chenchen.newapplication.album.imageloader.ImageScannerModelImpl;
+import com.example.chenchen.newapplication.tensorflow.Classifier;
 import com.example.chenchen.newapplication.tensorflow.Config;
+import com.example.chenchen.newapplication.tensorflow.TensorFlowImageClassifier;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,13 +42,21 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.function.ToDoubleBiFunction;
 
+import static com.example.chenchen.newapplication.tensorflow.ImageDealer.do_tensorflow;
+import static com.example.chenchen.newapplication.tensorflow.ImageDealer.insertImageIntoDB;
+
 /**
  * Created by chenchen on 18-4-30.
  */
 
 public class WelcomeActivity extends AppCompatActivity {
-    private static final int PERMISSION_REQUEST_STORAGE=200;
+    private static final int PERMISSION_REQUEST_STORAGE = 200;
     private MyDatabaseOperator dbOperator;
+    List<String> notBeclassiedImageList;
+
+    private Classifier classifier;
+    private ContentValues value;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,12 +78,10 @@ public class WelcomeActivity extends AppCompatActivity {
                         Manifest.permission.READ_EXTERNAL_STORAGE,
                         Manifest.permission.SYSTEM_ALERT_WINDOW,
                 }, PERMISSION_REQUEST_STORAGE);
-            }
-            else {
+            } else {
                 do_prepare(WelcomeActivity.this);
             }
-        }
-        else {
+        } else {
             do_prepare(WelcomeActivity.this);
         }
 
@@ -93,8 +106,8 @@ public class WelcomeActivity extends AppCompatActivity {
 //        }).start();
 //    }
 
-    private void do_prepare(Context context){
-        List<String> notBeclassiedImageList=new ArrayList<>();
+    private void do_prepare(Context context) {
+        notBeclassiedImageList = new ArrayList<>();
         //内部操作数据库  里面有创建数据库 但是仅会执行一次
         MyDatabaseOperator operator = new MyDatabaseOperator(context, Config.DB_NAME, Config.dbversion);
         //get all images
@@ -102,34 +115,36 @@ public class WelcomeActivity extends AppCompatActivity {
         //所以我现在需要去写数据库查询图片数据的接口
 
 //        List<Map> imagelist=operator.getExternalImageInfo(context);
-       //得到图片信息
-        String  url;
+        //得到图片信息
+        String url;
 
-        ImageScannerModelImpl imageScannerModel=new ImageScannerModelImpl();
+        ImageScannerModelImpl imageScannerModel = new ImageScannerModelImpl();
         //这里就是开的线程 加载照片
         imageScannerModel.startScanImage(context, getSupportLoaderManager(), new ImageScannerModel.OnScanImageFinish() {
             @Override
             public void onFinish(ImageScanResult imageScanResult) {
-                Log.d("chen","onFinish");
-                Map<String,ArrayList<String>> findResult=imageScanResult.getAlbumInfo();
-                Log.d("chen","findResult size（文件夹的数目）="+findResult.size()); //文件夹的数目
-                Set<String> keyset=findResult.keySet();
+                Log.d("chen", "onFinish");
+                Map<String, ArrayList<String>> findResult = imageScanResult.getAlbumInfo();
+                Log.d("chen", "findResult size（文件夹的数目）=" + findResult.size()); //文件夹的数目
+                Set<String> keyset = findResult.keySet();
                 ArrayList<String> urlList;
                 List<Map> search_result;
-                for (String key: keyset){
-                     urlList=findResult.get(key);
-                    for(String url:urlList){
-                        search_result=operator.search(Config.ALBUM_NAME,"url = '"+url+"'");
-                        if(search_result.size()==0){
-                            notBeclassiedImageList.add(url);
+                for (String key : keyset) {
+                    if (key.equals("Download")) {
+                        urlList = findResult.get(key);
+                        for (String url : urlList) {
+                            search_result = operator.search(Config.ALBUM_NAME, "url = '" + url + "'");
+                            if (search_result.size() == 0) {
+                                notBeclassiedImageList.add(url);
+                            }
                         }
                     }
                 }
-                Log.d("chen","未处理的图片有"+notBeclassiedImageList.size());
+                classifyNewImages();
+                Log.d("chen", "未处理的图片有" + notBeclassiedImageList.size());
                 operator.close();
             }
         });
-
 
 
 //        for(Map<String,String> image:imagelist){
@@ -159,18 +174,79 @@ public class WelcomeActivity extends AppCompatActivity {
 
 
     }
-    private Handler myHandler=new Handler(){
+
+    //分类
+    private void classifyNewImages() {
+
+        new Thread(new Runnable() {
+            @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+            @Override
+            public void run() {
+                Looper.prepare();
+                // init tensorflow
+                if (classifier == null) {
+                    // get permission
+                    try {
+                        classifier = TensorFlowImageClassifier.create(getAssets(), Config.MODEL_FILE,
+                                Config.LABEL_FILE, Config.INPUT_SIZE, Config.IMAGE_MEAN,
+                                Config.IMAGE_STD, Config.INPUT_NAME, Config.OUTPUT_NAME);
+
+
+                    } catch (Exception e) {
+                        Log.d("chen", "mainActivity tensorflow load error!!!!!");
+                    }
+                }
+                Bitmap bitmap;
+                value = new ContentValues();
+
+                dbOperator = new MyDatabaseOperator(WelcomeActivity.this, Config.DB_NAME, Config.dbversion);
+                for (String url : notBeclassiedImageList) {
+                    // myHandler.sendEmptyMessage(0x23);
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inPreferredConfig = Bitmap.Config.ARGB_4444;
+                    bitmap = BitmapFactory.decodeFile(url, options);
+                    insertImageIntoDB(url, do_tensorflow(bitmap, classifier), dbOperator, value);
+                }
+                dbOperator.close();
+                Log.d("chen", "分类完毕");
+                myHandler.sendEmptyMessage(10);
+                Looper.loop();
+            }
+        }).start();
+    }
+
+    private Handler myHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            switch (msg.what){
+            switch (msg.what) {
                 case 1:
                     classImage();
+                    break;
+                case 10:
+                    do_finish();
+                    break;
             }
         }
     };
-    private void classImage(){
+
+    private void do_finish(){
+        Intent intent=new Intent(WelcomeActivity.this,MainActivity.class);
+        Timer timer = new Timer();
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                Log.d("chen","leave WelcomeActivity");
+                startActivity(intent);
+                WelcomeActivity.this.finish();
+            }
+        };
+        timer.schedule(task, 1000 * 2);
+    }
+
+    private void classImage() {
 
     }
+
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -179,11 +255,12 @@ public class WelcomeActivity extends AppCompatActivity {
         }
     };
 
-    public void getHome(){
+    public void getHome() {
         Intent intent = new Intent(WelcomeActivity.this, MainActivity.class);
         startActivity(intent);
         finish();
     }
+
     //动态请求权限，得到用户的响应之后
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -208,10 +285,6 @@ public class WelcomeActivity extends AppCompatActivity {
             }
         }
     }
-
-
-
-
 
 
 }

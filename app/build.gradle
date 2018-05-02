@@ -41,6 +41,12 @@ android {
     }
 }
 
+repositories {
+    flatDir {
+        dirs 'libs' //this way we can find the .aar file in libs folder
+    }
+}
+
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
@@ -55,4 +61,7 @@ dependencies {
     compile 'com.facebook.stetho:stetho:1.5.0'
 
     compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.5'
+    compile(name: 'photoview-release-1.2.4', ext: 'aar')
+    compile(name: 'AndroidUtils', ext: 'aar')
+    compile 'com.github.bumptech.glide:glide:3.7.0'
 }
