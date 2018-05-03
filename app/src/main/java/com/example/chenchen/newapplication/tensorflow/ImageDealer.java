@@ -30,6 +30,7 @@ import static android.media.ThumbnailUtils.extractThumbnail;
 public class ImageDealer {
     /**
      * resize bitmap for tf
+     *
      * @param bitmap
      * @return
      */
@@ -52,6 +53,7 @@ public class ImageDealer {
 
     /**
      * resize image by url
+     *
      * @param context
      * @param url
      * @return
@@ -61,12 +63,13 @@ public class ImageDealer {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.ARGB_4444;
         bitmap = BitmapFactory.decodeFile(url, options);
-        bitmap = extractThumbnail(bitmap,180 , 180);
+        bitmap = extractThumbnail(bitmap, 180, 180);
         return bitmap;
     }
 
     /**
      * insert new image into db
+     *
      * @param url
      * @param results
      * @param operator
@@ -76,17 +79,22 @@ public class ImageDealer {
     //得到分类结果时 往数据库里插入数据
     public static void insertImageIntoDB(String url, List<Classifier.Recognition> results,
                                          MyDatabaseOperator operator, ContentValues value) {
-        if (results == null) return;
+        if (results == null) {
+            Log.d("chen", "分类结果为null");
+            return;
+        }
+
         List<Map> findResult;
         //Recognition is a Class
-        Log.d("chen","插入的results size is "+results.size());
         for (Classifier.Recognition cr : results) {
             String type = cr.getTitle();
             // AlbumPhotos
             value.clear();
             value.put("album_name", type);   //// TODO: 18-5-2  in this album_name==tf_type 
+            Log.d("chen", "album_name" + type);
             value.put("url", url);
             value.put("tf_type", type);
+            value.put("folder_name", "Download"); //// TODO: 18-5-2 暂时先处理download下面的
             value.put("confidence", cr.getConfidence());  //null
             operator.insert("AlbumPhotos", value);
 
@@ -95,7 +103,7 @@ public class ImageDealer {
             if (findResult.size() == 0) {
                 value.clear();
                 value.put("album_name", type);
-                value.put("image",url );
+                value.put("image", url);
                 operator.insert("Album", value);
             }
             //TFInfromation
@@ -104,22 +112,36 @@ public class ImageDealer {
 //            value.put("tf_type", type);
 //            value.put("confidence", cr.getConfidence());
 //            operator.insert("TFInformation", value);
+            //不要关数据库
         }
     }
 
+    //暂时插入无法分类的图片信息
+    public static void InsertImageInfoDB(MyDatabaseOperator operator, ContentValues values) {
+
+    }
+
+    public static void insertImageFolderIntoDB(MyDatabaseOperator operator, ContentValues value) {
+
+        operator.insert("AlbumFolder", value);
+
+    }
 
     public static List<Map<String, String>> getAlbumInfo(Context ctx) {
         List<Map<String, String>> result = new ArrayList<>();
         Config.dbHelper = new MyDatabaseHelper(ctx, "Album.db", null, Config.dbversion);
+
         SQLiteDatabase db = Config.dbHelper.getWritableDatabase();
-        Log.d("chen","getAlbumInfo");
+        Log.d("chen", "getAlbumInfo");
         Cursor cursor = db.query("Album", null, null, null, null, null, null);
-        Log.d("chen","cursor size="+cursor.getCount());
-        if (cursor==null) Log.d("chen","cursor is null !!!!!!!!!!!!!");
+        Log.d("chen", "cursor size=" + cursor.getCount());
+        if (cursor == null)
+            Log.d("chen", "cursor is null !!!!!!!!!!!!!");
         if (cursor.moveToFirst()) {
             Map<String, String> tmp;
             do {
-                tmp = new HashMap<>();;
+                tmp = new HashMap<>();
+                ;
                 String album_name = cursor.getString(cursor.getColumnIndex("album_name"));
                 String url = cursor.getString(cursor.getColumnIndex("image"));
                 tmp.put("album_name", album_name);
@@ -134,8 +156,87 @@ public class ImageDealer {
         Log.d("Album info", "END");
         return result;
     }
+
+    //转到operator 此时有一个数据库操作的实例 不用这个方法
+//    public static List<String> getAllFolderName(Context context){
+//        List<String> result = new ArrayList<>();
+//        Config.dbHelper = new MyDatabaseHelper(context, "Album.db", null, Config.dbversion);
+//        SQLiteDatabase db = Config.dbHelper.getWritableDatabase();
+//    }
+    //查询某一类别或者文件夹下 所有的图片
+//    Cursor c = db.rawQuery("select * from user where username=? and password = ?",
+    public static List<String> getImageInfo(Context ctx, String column_name, String type) {
+        List<String> result = new ArrayList<>();
+        Config.dbHelper = new MyDatabaseHelper(ctx, "Album.db", null, Config.dbversion);
+        SQLiteDatabase db = Config.dbHelper.getWritableDatabase();
+        Log.d("chen", "AlbumPhotos");
+        Cursor cursor = db.query("AlbumPhotos", new String[]{"url"}, column_name + "=?", new String[]{type}, null, null, null);
+
+        if (cursor == null)
+            Log.d("chen", "cursor is null !!!!!!!!!!!!!");
+        if (cursor.moveToFirst()) {
+
+            do {
+                result.add(cursor.getString(0));
+//                String album_name = cursor.getString(cursor.getColumnIndex("album_name"));
+//                String url = cursor.getString(cursor.getColumnIndex("url"));
+//                tmp.put("album_name", album_name);
+//                tmp.put("image", url);
+//                result.add(tmp);
+//                Log.d("ITEM", String.valueOf(tmp));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        db.close();
+
+        Log.d("Album info", "END");
+        return result;
+    }
+
+
+    public static List<Map> getFolderInfo(Context context) {
+        List<Map> result = new ArrayList<>();
+        Config.dbHelper = new MyDatabaseHelper(context, "Album.db", null, Config.dbversion);
+        SQLiteDatabase db = Config.dbHelper.getWritableDatabase();
+        Cursor cursor = db.rawQuery("select folder_name,image from AlbumFolder", null);
+
+        Map<String, String> folder_item;
+        if (cursor.moveToFirst()) {
+            folder_item = new HashMap<>();
+            do {
+                folder_item.put(cursor.getString(0), cursor.getString(1));
+                result.add(folder_item);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        Log.d("chen", "文件夹页面查询到的数据有" + result.size());
+        db.close();
+        return result;
+    }
+
+    public static int getFolderImageCount(Context context, String folder) {
+        Config.dbHelper = new MyDatabaseHelper(context, "Album.db", null, Config.dbversion);
+        SQLiteDatabase db = Config.dbHelper.getWritableDatabase();
+        Cursor cursor;
+        int count = 0;
+
+        cursor = db.query("AlbumPhotos", new String[]{"url"}, "folder_name=?", new String[]{folder}, null, null, null);
+        if (cursor.moveToFirst()) {
+            do {
+                count++;
+            } while (cursor.moveToNext());
+        }
+//        Log.d("chen",folder+"有图片"+count);
+
+        // TODO: 18-5-3  cursor未关闭 
+        cursor.close();
+        db.close();
+        return count;
+    }
+
     /**
      * use tf to classify the image
+     *
      * @param bitmap
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)

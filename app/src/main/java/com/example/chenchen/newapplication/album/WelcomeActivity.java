@@ -7,13 +7,12 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
+import android.icu.text.LocaleDisplayNames;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
@@ -21,7 +20,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.example.chenchen.newapplication.R;
@@ -33,14 +31,12 @@ import com.example.chenchen.newapplication.tensorflow.Classifier;
 import com.example.chenchen.newapplication.tensorflow.Config;
 import com.example.chenchen.newapplication.tensorflow.TensorFlowImageClassifier;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.function.ToDoubleBiFunction;
 
 import static com.example.chenchen.newapplication.tensorflow.ImageDealer.do_tensorflow;
 import static com.example.chenchen.newapplication.tensorflow.ImageDealer.insertImageIntoDB;
@@ -60,10 +56,11 @@ public class WelcomeActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        /**标题是属于View的，所以窗口所有的修饰部分被隐藏后标题依然有效,需要去掉标题**/
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
+//        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+//                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+//        /**标题是属于View的，所以窗口所有的修饰部分被隐藏后标题依然有效,需要去掉标题**/
+//        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_welcome);
         //请求读写权限
         if (Build.VERSION.SDK_INT >= 23) {
@@ -129,20 +126,42 @@ public class WelcomeActivity extends AppCompatActivity {
                 Set<String> keyset = findResult.keySet();
                 ArrayList<String> urlList;
                 List<Map> search_result;
+                List<String> find_folder = operator.searchAllFolderName();
+                value = new ContentValues();
                 for (String key : keyset) {
-                    if (key.equals("Download")) {
+                    if (!key.equals("0")) {
+                        Log.d("key", key);
                         urlList = findResult.get(key);
+                        if (!find_folder.contains(key)) {
+                            value.put("folder_name", key);
+                            value.put("image", urlList.get(0));
+                            operator.insert("AlbumFolder", value);
+                            value.clear();
+                        }
                         for (String url : urlList) {
                             search_result = operator.search(Config.ALBUM_NAME, "url = '" + url + "'");
-                            if (search_result.size() == 0) {
-                                notBeclassiedImageList.add(url);
+                            if (key.equals("Download")) {
+                                if (search_result.size() == 0) {
+                                    notBeclassiedImageList.add(url);
+                                }
+                            } else {
+                                if (search_result.size() == 0) {
+                                    value.put("folder_name", key);
+                                    value.put("url", url);
+                                    operator.insert("AlbumPhotos", value);
+                                    value.clear();
+                                }
                             }
                         }
                     }
+
                 }
+
+                operator.close();
+
                 classifyNewImages();
                 Log.d("chen", "未处理的图片有" + notBeclassiedImageList.size());
-                operator.close();
+
             }
         });
 
@@ -198,8 +217,9 @@ public class WelcomeActivity extends AppCompatActivity {
                 }
                 Bitmap bitmap;
                 value = new ContentValues();
-
+                if(dbOperator!=null) Log.d("chen","error dboperator is not null");
                 dbOperator = new MyDatabaseOperator(WelcomeActivity.this, Config.DB_NAME, Config.dbversion);
+                Log.d("chen","未分类图片"+notBeclassiedImageList.size());
                 for (String url : notBeclassiedImageList) {
                     // myHandler.sendEmptyMessage(0x23);
                     BitmapFactory.Options options = new BitmapFactory.Options();
@@ -207,6 +227,8 @@ public class WelcomeActivity extends AppCompatActivity {
                     bitmap = BitmapFactory.decodeFile(url, options);
                     insertImageIntoDB(url, do_tensorflow(bitmap, classifier), dbOperator, value);
                 }
+//                List<Map> ImageAll=dbOperator.search("AlbumPhotos");
+//                Log.d("chen","ImageAll size is "+ImageAll.size());
                 dbOperator.close();
                 Log.d("chen", "分类完毕");
                 myHandler.sendEmptyMessage(10);
@@ -229,13 +251,13 @@ public class WelcomeActivity extends AppCompatActivity {
         }
     };
 
-    private void do_finish(){
-        Intent intent=new Intent(WelcomeActivity.this,MainActivity.class);
+    private void do_finish() {
+        Intent intent = new Intent(WelcomeActivity.this, MainActivity.class);
         Timer timer = new Timer();
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                Log.d("chen","leave WelcomeActivity");
+                Log.d("chen", "leave WelcomeActivity");
                 startActivity(intent);
                 WelcomeActivity.this.finish();
             }

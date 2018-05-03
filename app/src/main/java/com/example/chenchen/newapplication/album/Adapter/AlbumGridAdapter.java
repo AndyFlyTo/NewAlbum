@@ -1,5 +1,6 @@
 package com.example.chenchen.newapplication.album.Adapter;
 
+import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -8,6 +9,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 
+import com.bumptech.glide.Glide;
 import com.clock.utils.common.RuleUtils;
 import com.example.chenchen.newapplication.R;
 import com.example.chenchen.newapplication.album.entity.AlbumInfo;
@@ -22,11 +24,13 @@ import java.util.Map;
 
 public class AlbumGridAdapter extends BaseAdapter {
 
-    private List<Map<String,String>> albumInfoList;
+    private List<String> albumInfoList;
     private View.OnClickListener onClickListener;
     private OnClickPreviewImageListener onClickPreviewImageListener;
+    private Context context;
 
-    public AlbumGridAdapter(List<Map<String,String>> albumInfoList, OnClickPreviewImageListener OnClickPreviewImageListener){
+    public AlbumGridAdapter(Context context,List<String> albumInfoList, OnClickPreviewImageListener OnClickPreviewImageListener){
+        this.context=context;
         this.albumInfoList=albumInfoList;
         this.onClickPreviewImageListener=OnClickPreviewImageListener;
     }
@@ -70,6 +74,17 @@ public class AlbumGridAdapter extends BaseAdapter {
 
         }
 
+        String url=albumInfoList.get(position);
+
+        Glide
+                .with(context)
+                .load(url)
+                .centerCrop()
+                .placeholder(R.drawable.loading)
+                .error(R.drawable.error)
+                .crossFade()
+                .thumbnail(0.1f).into(holder.albumItem);
+
         // TODO: 18-5-2
         /*
         ImageInfo imageInfo = mImageInfoList.get(position);
@@ -95,27 +110,29 @@ public class AlbumGridAdapter extends BaseAdapter {
 //        holder.imageSelectedCheckBox.setTag(imageInfo);
 //        holder.imageSelectedCheckBox.setOnCheckedChangeListener(mImageOnSelectedListener);//监听图片是否被选中的状态
 
-//        if (mImageItemClickListener == null) {
-//            mImageItemClickListener = new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    ImageInfo imageInfo = (ImageInfo) v.getTag();
-//                    if (mOnClickPreviewImageListener != null) {
-//                        mOnClickPreviewImageListener.onClickPreview(imageInfo);
-//                    }
-//                }
-//            };
-//        }
+        if (onClickListener == null) {
+            onClickListener = new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    String image_url = (String) v.getTag(R.id.image_key);
+                    if (onClickPreviewImageListener != null) {
+                        onClickPreviewImageListener.onClickPreview(image_url);
+                    }
+                }
+            };
+        }
+//
 
 
+        // TODO: 18-5-2  setTag getTag确定那个被摁下
+        //// java.lang.IllegalArgumentException: You must not call setTag() on a view Glide is targeting
+        holder.albumItem.setTag(R.id.image_key,url);
 
-        // TODO: 18-5-2
-//        holder.albumItem.setTag(imageInfo);
 
-
-//        holder.albumItem.setOnClickListener(mImageItemClickListener);
+        holder.albumItem.setOnClickListener(onClickListener);
 
         return convertView;
+
     }
 
     private static class AlbumViewHolder {
@@ -136,8 +153,8 @@ public class AlbumGridAdapter extends BaseAdapter {
         /**
          * 当想点击某张图片进行预览的时候触发此函数
          *
-         * @param albumInfo
+         * @param image_url
          */
-        public void onClickPreview(AlbumInfo albumInfo);
+        public void onClickPreview(String image_url);
     }
 }

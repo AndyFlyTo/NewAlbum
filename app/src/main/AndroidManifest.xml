@@ -46,6 +46,7 @@
         </activity>
         <activity android:name=".album.PhotoActivity"></activity>
         <activity android:name=".album.MainActivity"></activity>
+        <activity android:name=".album.ImageScanActivity"></activity>
     </application>
 
 </manifest>

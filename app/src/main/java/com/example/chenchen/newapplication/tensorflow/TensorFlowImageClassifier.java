@@ -230,9 +230,9 @@ public class TensorFlowImageClassifier implements Classifier {
         int bestIdx = -1;
         float max = -1000;
         // TODO: 18-5-2
-        //Log.d("chen", "result");
+        Log.d("chen", "result");
         for (int i = 0; i < elems.length; i++) {
-//            Log.d("chen", elems[i] + "");
+            Log.d("chen", elems[i] + "");
             float elem = elems[i];
             if (elem > max) {
                 max = elem;

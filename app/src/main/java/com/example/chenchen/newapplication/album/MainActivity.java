@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    private ActionBar actionBar;
+    public static ActionBar actionBar;
     private BottomNavigationView navigation;
 
     private FragmentManager fragmentManager;

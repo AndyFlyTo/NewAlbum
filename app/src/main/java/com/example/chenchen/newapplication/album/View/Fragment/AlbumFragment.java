@@ -1,7 +1,8 @@
 package com.example.chenchen.newapplication.album.View.Fragment;
 
 import android.support.v4.app.FragmentManager;
-import android.app.FragmentTransaction;
+
+import android.support.v4.app.FragmentTransaction;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
@@ -15,6 +16,7 @@ import android.widget.GridView;
 
 import com.example.chenchen.newapplication.R;
 import com.example.chenchen.newapplication.album.Adapter.AlbumAdapter;
+import com.example.chenchen.newapplication.album.MainActivity;
 import com.example.chenchen.newapplication.album.entity.AlbumInfo;
 
 import java.util.ArrayList;
@@ -52,26 +54,26 @@ public class AlbumFragment extends Fragment {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v,
                                     int position, long id) {
-                Log.d("chen","进入每一分类页面,this is a fragment");
-                System.out.println(position+ " " +id);
+//                Log.d("chen","进入每一分类页面,this is a fragment");
+//                System.out.println(position+ " " +id);
                 // 进入一个新的fregment，这个fregment就是photos.java
                 // photos.java中显示具体相册的具体照片
                 //创建新的photos对象，初始数值qq暂时没有用， 可以定义为相册id等，但是需要进一步修改
                 String type = result.get(position).get("album_name");
                 Log.d("Album_Name", type);
-//                Photos myJDEditFragment = new Photos(type);
-//                ft = manager.beginTransaction();
-//                ft.add(R.id.ly_content , myJDEditFragment);
-//                ft.setTransition(FragmentTransaction. TRANSIT_FRAGMENT_OPEN);
-//                try {
-//                    android.support.v7.app.ActionBar actionBar = MainActivity.actionBar;
-//                    actionBar.setDisplayHomeAsUpEnabled(true);
-//                    actionBar.setTitle("");
-//                } catch (Exception e) {
-//                    ;
-//                }
-//                ft.addToBackStack( null);
-//                ft.commit();
+                AlbumDetailFragment fragment=new AlbumDetailFragment(type);
+                ft = manager.beginTransaction();
+                ft.add(R.id.content , fragment);
+                ft.setTransition(FragmentTransaction. TRANSIT_FRAGMENT_OPEN); //设置动画和效果
+                try {
+                    android.support.v7.app.ActionBar actionBar = MainActivity.actionBar;
+                    actionBar.setDisplayHomeAsUpEnabled(true);
+                    actionBar.setTitle("");
+                } catch (Exception e) {
+                    ;
+                }
+                ft.addToBackStack( null);//将fragment加入回退栈
+                ft.commit();
             }
         });
         return view;

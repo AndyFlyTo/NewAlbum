@@ -1,7 +1,6 @@
 package com.example.chenchen.newapplication.album.Database;
 
 import android.content.Context;
-import android.content.Loader;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
@@ -20,7 +19,12 @@ public class MyDatabaseHelper extends SQLiteOpenHelper {
     private static final String CREATE_ALBUM = "create table Album ("
             + "id integer primary key autoincrement, "
             + "album_name text, "
-            + "image text)";      //这个是？？？  image uri
+            + "image text)";
+    private static final String CREATE_FOLDER = "create table AlbumFolder ("
+            + "id integer primary key autoincrement, "
+            + "folder_name text, "
+            + "image text)";
+
 //    private static final String CREATE_TF_INFORMATION = "create table TFInformation ("
 //            + "id integer primary key autoincrement, "
 //            + "url text, "
@@ -43,7 +47,7 @@ public class MyDatabaseHelper extends SQLiteOpenHelper {
         try {
             db.execSQL(CREATE_ALBUM_PHOTOS);
             db.execSQL(CREATE_ALBUM);
-//            db.execSQL(CREATE_TF_INFORMATION);
+            db.execSQL(CREATE_FOLDER);
 //            db.execSQL(CREATE_SETTINGS);
             Toast.makeText(mContext, "Create succeeded", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
