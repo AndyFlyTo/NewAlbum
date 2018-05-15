@@ -146,6 +146,8 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    //使用Activity的onBackPressed()的代码覆盖
+
     /**
      * 打开相机获取图片  需要在xml中创建xml文件 指名拍照照片的存储路径
      */

@@ -262,7 +262,7 @@ public class WelcomeActivity extends AppCompatActivity {
                 WelcomeActivity.this.finish();
             }
         };
-        timer.schedule(task, 1000 * 2);
+        timer.schedule(task, 1000);
     }
 
     private void classImage() {

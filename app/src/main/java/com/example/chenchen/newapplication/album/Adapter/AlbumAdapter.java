@@ -50,9 +50,9 @@ public class AlbumAdapter extends ArrayAdapter<AlbumInfo> {
             holder = (ViewHolder)convertView.getTag();
         }
         holder.tv.setText(album.getAlbum_name());
-        Log.d("chen","adapter album_name="+album.getAlbum_name());
+//        Log.d("chen","adapter album_name="+album.getAlbum_name());
         String url = album.getUrl();
-        Log.d("chen","adapter album_url="+url);
+//        Log.d("chen","adapter album_url="+url);
 
         // TODO: 18-5-2  url==null 加载失败
         Glide

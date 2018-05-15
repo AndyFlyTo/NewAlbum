@@ -48,7 +48,7 @@ public class MyDatabaseHelper extends SQLiteOpenHelper {
             db.execSQL(CREATE_ALBUM_PHOTOS);
             db.execSQL(CREATE_ALBUM);
             db.execSQL(CREATE_FOLDER);
-//            db.execSQL(CREATE_SETTINGS);
+
             Toast.makeText(mContext, "Create succeeded", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(mContext, "Error", Toast.LENGTH_LONG).show();

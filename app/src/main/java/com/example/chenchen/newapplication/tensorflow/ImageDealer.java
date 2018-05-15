@@ -169,7 +169,7 @@ public class ImageDealer {
         List<String> result = new ArrayList<>();
         Config.dbHelper = new MyDatabaseHelper(ctx, "Album.db", null, Config.dbversion);
         SQLiteDatabase db = Config.dbHelper.getWritableDatabase();
-        Log.d("chen", "AlbumPhotos");
+
         Cursor cursor = db.query("AlbumPhotos", new String[]{"url"}, column_name + "=?", new String[]{type}, null, null, null);
 
         if (cursor == null)
@@ -233,6 +233,7 @@ public class ImageDealer {
         db.close();
         return count;
     }
+
 
     /**
      * use tf to classify the image

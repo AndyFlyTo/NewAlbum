@@ -6,8 +6,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -32,11 +36,12 @@ import static com.example.chenchen.newapplication.tensorflow.ImageDealer.getImag
  */
 
 public class AlbumDetailFragment extends Fragment implements AlbumGridAdapter.OnClickPreviewImageListener {
-    private static final int PREVIEW_REQUEST_CODE=1000;
+    private static final int PREVIEW_REQUEST_CODE = 1000;
     private List<String> albumInfoList;
     private static final String ARG_PARAM1 = "param1";
 
     private String type;
+    private String search_column_name;
 
     /**
      * 相册视图控件
@@ -47,11 +52,13 @@ public class AlbumDetailFragment extends Fragment implements AlbumGridAdapter.On
     private List<AlbumInfo> albumList = new ArrayList<AlbumInfo>();
 
 
-    public AlbumDetailFragment(){
+    public AlbumDetailFragment() {
 
     }
+
     @SuppressLint("ValidFragment")   //// TODO: 18-5-2  少了会写不了构造函数
-    public AlbumDetailFragment(String type) {
+    public AlbumDetailFragment(String search_column_name, String type) {
+        this.search_column_name = search_column_name;
         this.type = type;
     }
 
@@ -79,8 +86,9 @@ public class AlbumDetailFragment extends Fragment implements AlbumGridAdapter.On
         Log.d("chen", "AlbumDetailFragment onCreateView");
         View rootView = inflater.inflate(R.layout.fragment_detail_album, container, false);
         mAlbumGridView = (GridView) rootView.findViewById(R.id.gv_album);
-        if (type!=null){
-            initImage();
+        setHasOptionsMenu(true);
+        if (type != null) {
+            initImage(search_column_name);
             try {
                 // TODO: 18-5-2 返回键不管用
                 android.support.v7.app.ActionBar actionBar = MainActivity.actionBar;
@@ -88,25 +96,24 @@ public class AlbumDetailFragment extends Fragment implements AlbumGridAdapter.On
                 actionBar.setDisplayHomeAsUpEnabled(true);
                 actionBar.setDisplayShowHomeEnabled(true);
                 actionBar.setTitle(type);
+
             } catch (Exception e) {
                 ;
             }
         }
 
-        mAlbumGridViewAdapter = new AlbumGridAdapter(getContext(),albumInfoList, this);
+        mAlbumGridViewAdapter = new AlbumGridAdapter(getContext(), albumInfoList, this);
         mAlbumGridView.setAdapter(mAlbumGridViewAdapter);
         return rootView;
     }
 
-    protected void initImage(){
+    protected void initImage(String search_column_name) {
 
         if (getActivity().getApplicationContext() == null)
             Log.d("getContext() in Album", "null");
-        albumInfoList = getImageInfo(getActivity().getApplicationContext(),"album_name",type);
-        for(String s:albumInfoList){
-            Log.d("chen",s);
-        }
+        albumInfoList = getImageInfo(getActivity().getApplicationContext(), search_column_name, type);
     }
+
     @Override
     public void onAttach(Context context) {
 //        Log.d("chen", "AlbumDetailFragment onAttach");
@@ -115,12 +122,14 @@ public class AlbumDetailFragment extends Fragment implements AlbumGridAdapter.On
 
     @Override
     public void onDetach() {
+        Log.d("chen","AlbumDetailFrgment onDetach()!!!!");
 //        Log.d("chen", "AlbumDetailFragment onDetach");
         android.support.v7.app.ActionBar actionBar = MainActivity.actionBar;
-//        actionBar.setHomeButtonEnabled(true);
         actionBar.setDisplayHomeAsUpEnabled(false);
 //        actionBar.setDisplayShowHomeEnabled(true);
-        actionBar.setTitle("Album");
+        if (search_column_name.equals("folder_name"))
+            actionBar.setTitle("Folder");
+        else actionBar.setTitle("Album");
 
         super.onDetach();
     }
@@ -134,4 +143,21 @@ public class AlbumDetailFragment extends Fragment implements AlbumGridAdapter.On
     }
 
 
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Log.d("chen","AlbumDetailFragment！！！！！onOPtionsItemSelected");
+        switch (item.getItemId()) {
+            case android.R.id.home:
+//                Log.d("chen","albumDetail home is exec");
+//                int num=getActivity().getSupportFragmentManager().getBackStackEntryCount();
+//                Log.d("chen","num="+num);
+//                FragmentManager.BackStackEntry backstatck = getActivity().getSupportFragmentManager().getBackStackEntryAt(0);
+//                Log.d("chen","backstack getname="+backstatck.getName());
+//                //fragment得不到返回键的监听事件
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 }

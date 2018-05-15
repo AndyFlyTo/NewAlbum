@@ -6,18 +6,21 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.animation.AnimationUtils;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.example.chenchen.newapplication.R;
+import com.nostra13.universalimageloader.utils.L;
 
 import java.io.Serializable;
 import java.util.List;
@@ -35,14 +38,17 @@ public class ImageScanActivity extends AppCompatActivity {
     public final static String EXTRA_IMAGE_INFO = "ImageInfo";
 
     public final static String EXTRA_NEW_IMAGE_LIST = "NewImageList";
+    private ActionBar actionBar;
 
 
     private ViewPager mPreviewViewPager;
     private PagerAdapter mPreviewPagerAdapter;
     private ViewPager.OnPageChangeListener mPreviewChangeListener;
+    private CurrentImageListener imageListener;
     private TextView mTitleView;
-    private CheckBox mImageSelectedBox;
+
     private View mHeaderView, mFooterView;
+    private int imageIndex;
 
     /**
      * 所有图片的列表
@@ -57,8 +63,13 @@ public class ImageScanActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
+//        supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_image_preview);
+        actionBar = getSupportActionBar();
+        //没有左部返回键
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setTitle("");
+
 
 //        if (Build.VERSION.SDK_INT >= 11) {
 //            getWindow().getDecorView().setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
@@ -88,12 +99,47 @@ public class ImageScanActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_class, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    //actionBar点击事件
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Log.d("chen", "optionsItemSelected exec!!");
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                Log.d("chen", "home exec!!");
+                this.finish();
+//                onBackPressed();
+                break;
+            case R.id.action_class:
+                Log.d("chen", "跳转到分类页面");
+                Intent intent = new Intent(ImageScanActivity.this, ClassiedOnePictureActivity.class);
+                if (imageListener == null) {
+                    Log.d("chen","imageListener=null");
+                    intent.putExtra("image_url",mPreviewImageInfo);
+                } else
+                    intent.putExtra("image_url", imageListener.getCurrentImage());
+                startActivity(intent);
+                break;
+            default:
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     private void initView() {
 
+        // TODO: 18-5-7 index暂时不需要
 //        mTitleView = (TextView) findViewById(R.id.tv_title);
         if (mPreviewImageInfo != null && mPreviewImageInfoList != null) {
             if (mPreviewImageInfoList.contains(mPreviewImageInfo)) {
-                int imageIndex = mPreviewImageInfoList.indexOf(mPreviewImageInfo);
+                imageIndex = mPreviewImageInfoList.indexOf(mPreviewImageInfo);
+                Log.d("chen","imageIndex="+imageIndex);
                 setPositionToTitle(imageIndex);
 
             }
@@ -110,6 +156,7 @@ public class ImageScanActivity extends AppCompatActivity {
         mPreviewViewPager.setAdapter(mPreviewPagerAdapter);
         if (mPreviewImageInfo != null && mPreviewImageInfoList != null && mPreviewImageInfoList.contains(mPreviewImageInfo)) {
             int initShowPosition = mPreviewImageInfoList.indexOf(mPreviewImageInfo);
+            Log.d("chen", "此时position是：" + initShowPosition);
             mPreviewViewPager.setCurrentItem(initShowPosition);
         }
         mPreviewChangeListener = new PreviewChangeListener();
@@ -181,7 +228,7 @@ public class ImageScanActivity extends AppCompatActivity {
         public Object instantiateItem(ViewGroup container, int position) {
             View galleryItemView = View.inflate(ImageScanActivity.this, R.layout.preview_image_item, null);
 
-            String image_url= mPreviewImageInfoList.get(position);
+            String image_url = mPreviewImageInfoList.get(position);
             PhotoView galleryPhotoView = (PhotoView) galleryItemView.findViewById(R.id.iv_show_image);
             galleryPhotoView.setOnViewTapListener(mOnPreviewTapListener);
 
@@ -193,7 +240,6 @@ public class ImageScanActivity extends AppCompatActivity {
                     .error(R.drawable.error)
                     .crossFade()
                     .thumbnail(0.1f).into(galleryPhotoView);
-
 
 
 //            ImageLoaderWrapper.DisplayOption displayOption = new ImageLoaderWrapper.DisplayOption();
@@ -224,10 +270,20 @@ public class ImageScanActivity extends AppCompatActivity {
 
         @Override
         public void onPageSelected(int position) {
+            Log.d("chen", "onPageSelected");
+            Log.d("chen", "position is =" + position);
+
 //            mImageSelectedBox.setOnCheckedChangeListener(null);//先反注册监听，避免重复更新选中的状态
 
 //            setPositionToTitle(position);
-//            String  imageInfo = mPreviewImageInfoList.get(position);
+            String imageInfo = mPreviewImageInfoList.get(position);
+            imageListener = new CurrentImageListener() {
+                @Override
+                public String getCurrentImage() {
+                    return imageInfo;
+                }
+            };
+
 //            mImageSelectedBox.setChecked(imageInfo.isSelected());
 
 //            mImageSelectedBox.setOnCheckedChangeListener(ImagePreviewActivity.this);
@@ -272,13 +328,6 @@ public class ImageScanActivity extends AppCompatActivity {
             getWindow().getDecorView().setSystemUiVisibility(uiOptions);
         }
     }
-
-
-
-
-
-
-
 
 
 }

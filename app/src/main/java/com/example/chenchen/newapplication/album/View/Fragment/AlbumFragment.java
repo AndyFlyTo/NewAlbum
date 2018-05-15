@@ -1,5 +1,6 @@
 package com.example.chenchen.newapplication.album.View.Fragment;
 
+import android.content.Context;
 import android.support.v4.app.FragmentManager;
 
 import android.support.v4.app.FragmentTransaction;
@@ -44,7 +45,7 @@ public class AlbumFragment extends Fragment {
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Log.d("chen","进入分类相册");  //GridList
+        Log.d("chen","AlbumFragment");  //GridList
         View view = inflater.inflate(R.layout.fragment_album,container,false);
         initAlbums();
         GridView listView = (GridView) view.findViewById(R.id.album_list);
@@ -60,8 +61,8 @@ public class AlbumFragment extends Fragment {
                 // photos.java中显示具体相册的具体照片
                 //创建新的photos对象，初始数值qq暂时没有用， 可以定义为相册id等，但是需要进一步修改
                 String type = result.get(position).get("album_name");
-                Log.d("Album_Name", type);
-                AlbumDetailFragment fragment=new AlbumDetailFragment(type);
+//                Log.d("Album_Name", type);
+                AlbumDetailFragment fragment=new AlbumDetailFragment("album_name",type);
                 ft = manager.beginTransaction();
                 ft.add(R.id.content , fragment);
                 ft.setTransition(FragmentTransaction. TRANSIT_FRAGMENT_OPEN); //设置动画和效果
@@ -92,8 +93,19 @@ public class AlbumFragment extends Fragment {
         }
 
     }
+    public void onAttach(Context context) {
+        Log.d("chen", "AlbumFragment onAttach");
+        super.onAttach(context);
+    }
+
+    @Override
+    public void onDetach() {
+        Log.d("chen","AlbumFragment onDeach");
+        super.onDetach();
+    }
 
     public void onRefresh() {
+
         albumList.clear();
         initAlbums();
         adapter.notifyDataSetChanged();
