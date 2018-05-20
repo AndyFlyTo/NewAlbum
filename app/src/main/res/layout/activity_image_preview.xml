@@ -33,25 +33,22 @@
             <!--android:textSize="18sp" />-->
 
     <!--</RelativeLayout>-->
+<!---->
+    <RelativeLayout
+        android:id="@+id/footer_view"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentBottom="true"
+        android:background="@color/white"
+        android:visibility="invisible">
 
-    <!--<RelativeLayout-->
-        <!--android:id="@+id/footer_view"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="50dp"-->
-        <!--android:layout_alignParentBottom="true"-->
-        <!--android:background="#b4028ce5">-->
-
-        <!--<CheckBox-->
-            <!--android:id="@+id/ckb_image_select"-->
-            <!--android:layout_width="65dp"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_alignParentRight="true"-->
-            <!--android:layout_centerVertical="true"-->
-            <!--android:layout_marginRight="5dp"-->
-            <!--android:button="@drawable/image_selector"-->
-            <!--android:paddingLeft="4dp"-->
-            <!--android:text="@string/selected"-->
-            <!--android:textColor="@android:color/white"-->
-            <!--android:textSize="18sp" />-->
-    <!--</RelativeLayout>-->
+        <ImageView
+            android:id="@+id/image_delete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"
+            android:background="@mipmap/ic_delete_black_36dp"
+        />
+    </RelativeLayout>
 </RelativeLayout>

@@ -148,6 +148,7 @@ public class WelcomeActivity extends AppCompatActivity {
                                 if (search_result.size() == 0) {
                                     value.put("folder_name", key);
                                     value.put("url", url);
+                                    Log.d("chen","新添加图片url="+url);
                                     operator.insert("AlbumPhotos", value);
                                     value.clear();
                                 }
@@ -166,30 +167,6 @@ public class WelcomeActivity extends AppCompatActivity {
         });
 
 
-//        for(Map<String,String> image:imagelist){
-//            url=image.get("_data");
-//
-//
-//            //存在未处理的图片
-//            if(findResult.size()==0){
-//                notBeclassiedImageList.add(url);
-//
-//            }else{
-//
-//            }
-//            if(notBeclassiedImageList.size()!=0){
-//                if(notBeclassiedImageList.size()>20){
-//                    // TODO: 18-5-1 转到MainActivity去处理
-//                }else {
-//                    myHandler.sendEmptyMessage(1);
-//                    //handler.sendMessage()
-//                    // TODO: 18-5-1
-//                }
-//            }else {
-//
-//            }
-//
-//        }
 
 
     }

@@ -31,7 +31,7 @@ import java.util.Map;
 import static com.example.chenchen.newapplication.tensorflow.ImageDealer.getAlbumInfo;
 import static com.example.chenchen.newapplication.tensorflow.ImageDealer.getImageInfo;
 
-/**
+/**  图片详细信息
  * Created by chenchen on 18-4-30.
  */
 
@@ -83,10 +83,17 @@ public class AlbumDetailFragment extends Fragment implements AlbumGridAdapter.On
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        Log.d("chen", "AlbumDetailFragment onCreateView");
+        Log.d("chen", "AlbumDetailFragment onCreateView 执行！！！");
         View rootView = inflater.inflate(R.layout.fragment_detail_album, container, false);
         mAlbumGridView = (GridView) rootView.findViewById(R.id.gv_album);
         setHasOptionsMenu(true);
+
+        return rootView;
+    }
+
+    @Override
+    public void onStart() {
+        Log.d("chen","detail onStart");
         if (type != null) {
             initImage(search_column_name);
             try {
@@ -104,7 +111,7 @@ public class AlbumDetailFragment extends Fragment implements AlbumGridAdapter.On
 
         mAlbumGridViewAdapter = new AlbumGridAdapter(getContext(), albumInfoList, this);
         mAlbumGridView.setAdapter(mAlbumGridViewAdapter);
-        return rootView;
+        super.onStart();
     }
 
     protected void initImage(String search_column_name) {

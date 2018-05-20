@@ -23,5 +23,6 @@ public class Config {
     public static int dbversion = 5;
     public static String DB_NAME = "Album.db";
     public static String ALBUM_NAME="AlbumPhotos";
+    public static String Save_Location="/sdcard/temp/";
 
 }

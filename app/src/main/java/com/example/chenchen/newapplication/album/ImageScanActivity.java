@@ -1,9 +1,14 @@
 package com.example.chenchen.newapplication.album;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
@@ -13,13 +18,25 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.animation.AnimationUtils;
+import android.widget.CheckBox;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.afollestad.materialdialogs.DialogAction;
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.bumptech.glide.Glide;
 import com.example.chenchen.newapplication.R;
+import com.example.chenchen.newapplication.album.Database.MyDatabaseHelper;
+import com.example.chenchen.newapplication.album.Database.MyDatabaseOperator;
+import com.example.chenchen.newapplication.album.imageloader.ImageScan;
+import com.example.chenchen.newapplication.tensorflow.Config;
+import com.nostra13.universalimageloader.cache.disc.naming.HashCodeFileNameGenerator;
 import com.nostra13.universalimageloader.utils.L;
 
 import java.io.Serializable;
@@ -32,7 +49,7 @@ import uk.co.senab.photoview.PhotoViewAttacher;
  * Created by chenchen on 18-5-2.
  */
 
-public class ImageScanActivity extends AppCompatActivity {
+public class ImageScanActivity extends AppCompatActivity implements View.OnClickListener {
     private final static String TAG = ImageScanActivity.class.getSimpleName();
     public final static String EXTRA_IMAGE_INFO_LIST = "ImageInfoList";
     public final static String EXTRA_IMAGE_INFO = "ImageInfo";
@@ -47,8 +64,12 @@ public class ImageScanActivity extends AppCompatActivity {
     private CurrentImageListener imageListener;
     private TextView mTitleView;
 
-    private View mHeaderView, mFooterView;
+    private View mHeaderView;
+    private View mFooterView;
     private int imageIndex;
+    private ImageView image_delete;
+//    private CheckBox mImageSelectedBox;
+    MyDatabaseHelper helper;
 
     /**
      * 所有图片的列表
@@ -71,30 +92,30 @@ public class ImageScanActivity extends AppCompatActivity {
         actionBar.setTitle("");
 
 
-//        if (Build.VERSION.SDK_INT >= 11) {
-//            getWindow().getDecorView().setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
-//                @Override
-//                public void onSystemUiVisibilityChange(int visibility) {
-//                    if (View.SYSTEM_UI_FLAG_VISIBLE == visibility) {//此处需要添加顶部和底部消失和出现的动画效果
-//                        Log.d(TAG, "SYSTEM_UI_FLAG_VISIBLE");
+        if (Build.VERSION.SDK_INT >= 11) {
+            getWindow().getDecorView().setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
+                @Override
+                public void onSystemUiVisibilityChange(int visibility) {
+                    if (View.SYSTEM_UI_FLAG_VISIBLE == visibility) {//此处需要添加顶部和底部消失和出现的动画效果
+                        Log.d(TAG, "SYSTEM_UI_FLAG_VISIBLE");
 //                        mHeaderView.startAnimation(AnimationUtils.loadAnimation(ImagePreviewActivity.this, R.anim.top_enter_anim));
-//                        mFooterView.startAnimation(AnimationUtils.loadAnimation(ImagePreviewActivity.this, R.anim.bottom_enter_anim));
-
-//                    } else {
-//                        Log.i(TAG, "SYSTEM_UI_FLAG_INVISIBLE");
-//                        mHeaderView.startAnimation(AnimationUtils.loadAnimation(ImagePreviewActivity.this, R.anim.top_exit_anim));
-//                        mFooterView.startAnimation(AnimationUtils.loadAnimation(ImagePreviewActivity.this, R.anim.bottom_exit_anim));
-
-//                    }
-//                }
-//            });
-//        }
+                        mFooterView.startAnimation(AnimationUtils.loadAnimation(ImageScanActivity.this, R.anim.bottom_enter_anim));
+//
+                    } else {
+                        Log.i(TAG, "SYSTEM_UI_FLAG_INVISIBLE");
+//                        mHeaderView.startAnimation(AnimationUtils.loadAnimation(ImageScanActivity.this, R.anim.top_exit_anim));
+                        mFooterView.startAnimation(AnimationUtils.loadAnimation(ImageScanActivity.this, R.anim.bottom_exit_anim));
+//
+                    }
+                }
+            });
+        }
 
 //        mImageLoaderWrapper = ImageLoaderFactory.getLoader();
 
         mPreviewImageInfo = (String) getIntent().getSerializableExtra(EXTRA_IMAGE_INFO);
         mPreviewImageInfoList = (List<String>) getIntent().getSerializableExtra(EXTRA_IMAGE_INFO_LIST);
-
+        Log.d("chen", "文件夹数目=" + mPreviewImageInfoList.size());
         initView();
 
     }
@@ -112,20 +133,19 @@ public class ImageScanActivity extends AppCompatActivity {
         Log.d("chen", "optionsItemSelected exec!!");
         switch (item.getItemId()) {
             case android.R.id.home:
-                Log.d("chen", "home exec!!");
                 this.finish();
-//                onBackPressed();
                 break;
             case R.id.action_class:
                 Log.d("chen", "跳转到分类页面");
                 Intent intent = new Intent(ImageScanActivity.this, ClassiedOnePictureActivity.class);
                 if (imageListener == null) {
-                    Log.d("chen","imageListener=null");
-                    intent.putExtra("image_url",mPreviewImageInfo);
+                    Log.d("chen", "imageListener=null");
+                    intent.putExtra("image_url", mPreviewImageInfo);
                 } else
                     intent.putExtra("image_url", imageListener.getCurrentImage());
                 startActivity(intent);
                 break;
+            
             default:
                 break;
         }
@@ -139,17 +159,17 @@ public class ImageScanActivity extends AppCompatActivity {
         if (mPreviewImageInfo != null && mPreviewImageInfoList != null) {
             if (mPreviewImageInfoList.contains(mPreviewImageInfo)) {
                 imageIndex = mPreviewImageInfoList.indexOf(mPreviewImageInfo);
-                Log.d("chen","imageIndex="+imageIndex);
+                Log.d("chen", "imageIndex=" + imageIndex);
                 setPositionToTitle(imageIndex);
-
             }
         }
 
-//        mImageSelectedBox = (CheckBox) findViewById(R.id.ckb_image_select);
+        image_delete= (ImageView) findViewById(R.id.image_delete);
         if (mPreviewImageInfo != null) {
 //            mImageSelectedBox.setChecked(mPreviewImageInfo.isSelected());
         }
 //        mImageSelectedBox.setOnCheckedChangeListener(this);
+        image_delete.setOnClickListener(this);
 
         mPreviewViewPager = (ViewPager) findViewById(R.id.gallery_viewpager);
         mPreviewPagerAdapter = new PreviewPagerAdapter();
@@ -158,6 +178,7 @@ public class ImageScanActivity extends AppCompatActivity {
             int initShowPosition = mPreviewImageInfoList.indexOf(mPreviewImageInfo);
             Log.d("chen", "此时position是：" + initShowPosition);
             mPreviewViewPager.setCurrentItem(initShowPosition);
+
         }
         mPreviewChangeListener = new PreviewChangeListener();
         mPreviewViewPager.addOnPageChangeListener(mPreviewChangeListener);
@@ -165,17 +186,72 @@ public class ImageScanActivity extends AppCompatActivity {
 //        findViewById(R.id.iv_back).setOnClickListener(this);
 
 //        mHeaderView = findViewById(R.id.header_view);
-//        mFooterView = findViewById(R.id.footer_view);
+        mFooterView = findViewById(R.id.footer_view);
     }
 
-//    @Override
-//    public void onClick(View v) {
-//        int viewId = v.getId();
-//        if (viewId == R.id.iv_back) {
-//            onBackPressed();
-//
-//        }
-//    }
+    @Override
+    public void onClick(View v) {
+        int viewId = v.getId();
+        if (viewId == R.id.image_delete) {
+            new MaterialDialog.Builder(this)
+                    .title("确定要删除吗？")
+                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            if (helper == null)
+                                helper = new MyDatabaseHelper(ImageScanActivity.this, Config.DB_NAME, null, Config.dbversion);
+                            SQLiteDatabase db = helper.getWritableDatabase();
+                            String url;
+                            final int id;
+                            if (imageListener == null) {
+                                Log.d("chen", "imageListener=null");
+                                url = mPreviewImageInfo;
+                                id = mPreviewImageInfoList.indexOf(mPreviewImageInfo);
+                            } else {
+                                url = imageListener.getCurrentImage();
+                                id = imageListener.getCurrentId();
+                            }
+                            Log.d("chen", "delete url=" + url);
+                            db.delete("AlbumPhotos", "url=?", new String[]{url});
+                            db.delete("AlbumFolder","image=?",new String[]{url});
+                            db.close();
+                            //同时也要触发下一页显示
+                            int imageId = id + 1;
+                            if (imageId == mPreviewImageInfoList.size()) {
+                                finish();
+                            } else
+                                mPreviewViewPager.setCurrentItem(imageId);
+
+                            // TODO: 18-5-20 如果删除的是最后一个 弹出
+                            Log.d("chen", "current index =" + imageId);
+                            //// TODO: 18-5-20如果目录下仅有一张照片且被删除，此时还要更新文件夹相册 
+
+                            updateMediaImage(url);
+                        }
+                    })
+                    .positiveText("Yes")
+                    .negativeText("No")
+                    .positiveColor(getResources().getColor(R.color.colorPrimary))
+                    .negativeColor(getResources().getColor(R.color.colorPrimary))
+                    .onNegative(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .show();
+
+
+        }
+    }
+
+    //通知系统媒体库删除
+    public void updateMediaImage(String filePath) {
+        Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+        ContentResolver mContentResolver = ImageScanActivity.this.getContentResolver();
+        String where = MediaStore.Images.Media.DATA + "='" + filePath + "'";
+        mContentResolver.delete(uri, where, null);
+    }
 
     @Override
     public void onBackPressed() {
@@ -203,6 +279,7 @@ public class ImageScanActivity extends AppCompatActivity {
             toggleImmersiveMode();
         }
     };
+
 
     /**
      * 相册适配器
@@ -242,11 +319,6 @@ public class ImageScanActivity extends AppCompatActivity {
                     .thumbnail(0.1f).into(galleryPhotoView);
 
 
-//            ImageLoaderWrapper.DisplayOption displayOption = new ImageLoaderWrapper.DisplayOption();
-//            displayOption.loadErrorResId = R.mipmap.img_error;
-//            displayOption.loadingResId = R.mipmap.img_default;
-//            mImageLoaderWrapper.displayImage(galleryPhotoView, imageInfo.getImageFile(), displayOption);
-
             container.addView(galleryItemView);
             return galleryItemView;
         }
@@ -277,10 +349,16 @@ public class ImageScanActivity extends AppCompatActivity {
 
 //            setPositionToTitle(position);
             String imageInfo = mPreviewImageInfoList.get(position);
+
             imageListener = new CurrentImageListener() {
                 @Override
                 public String getCurrentImage() {
                     return imageInfo;
+                }
+
+                @Override
+                public int getCurrentId() {
+                    return position;
                 }
             };
 

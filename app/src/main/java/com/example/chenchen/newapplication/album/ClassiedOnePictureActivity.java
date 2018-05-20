@@ -4,6 +4,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.icu.text.LocaleDisplayNames;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.provider.MediaStore;
@@ -63,7 +64,6 @@ public class ClassiedOnePictureActivity extends AppCompatActivity {
         Glide
                 .with(ClassiedOnePictureActivity.this)
                 .load(image)
-//                    .centerCrop()
                 .placeholder(R.drawable.loading)
                 .error(R.drawable.error)
                 .crossFade()
@@ -75,37 +75,42 @@ public class ClassiedOnePictureActivity extends AppCompatActivity {
         MyDatabaseHelper helper = new MyDatabaseHelper(ClassiedOnePictureActivity.this, Config.DB_NAME, null, Config.dbversion);
         SQLiteDatabase db = helper.getWritableDatabase();
         Cursor cursor = db.rawQuery("select album_name from AlbumPhotos where url=?", new String[]{image});
+        //纸张
         if (cursor.moveToFirst()) {
             result = cursor.getString(0);
+            if (result == null&&image.contains("tmp")) {
+
+                if (classifier == null) {
+                    Log.d("chen", "classied one picture  classifier==null");
+                    // get permission
+                    try {
+                        classifier = TensorFlowImageClassifier.create(getAssets(), Config.MODEL_FILE,
+                                Config.LABEL_FILE, Config.INPUT_SIZE, Config.IMAGE_MEAN,
+                                Config.IMAGE_STD, Config.INPUT_NAME, Config.OUTPUT_NAME);
+
+
+                    } catch (Exception e) {
+                        Log.d("chen", "mainActivity tensorflow load error!!!!!");
+                    }
+                }
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inPreferredConfig = Bitmap.Config.ARGB_4444;
+                Bitmap bitmap = BitmapFactory.decodeFile(image, options);
+                result = do_tensorflow(bitmap, classifier).get(0).getTitle();
+//            insertImageIntoDB(image, do_tensorflow(bitmap, classifier), dbOperator, value);
+            }
+            Log.d("chen","result="+result);
             cursor.close();
             db.close();
-        } else {
-            //// TODO: 18-5-7 为什么在在这里定Classifier就不行呢
-            if (classifier == null) {
-                // get permission
-                try {
-                    classifier = TensorFlowImageClassifier.create(getAssets(), Config.MODEL_FILE,
-                            Config.LABEL_FILE, Config.INPUT_SIZE, Config.IMAGE_MEAN,
-                            Config.IMAGE_STD, Config.INPUT_NAME, Config.OUTPUT_NAME);
-
-
-                } catch (Exception e) {
-                    Log.d("chen", "mainActivity tensorflow load error!!!!!");
-                }
-            }
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inPreferredConfig = Bitmap.Config.ARGB_4444;
-            Bitmap bitmap = BitmapFactory.decodeFile(image, options);
-            result=do_tensorflow(bitmap,classifier).get(0).getTitle();
-//            insertImageIntoDB(image, do_tensorflow(bitmap, classifier), dbOperator, value);
         }
 
         return result;
     }
 
-    // TODO: 18-5-7 这个方法什么时候执行
+    // 这个两个参数的方法系统出错 关机。。。时执行
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState, @Nullable PersistableBundle persistentState) {
+    public void onCreate(@Nullable Bundle savedInstanceState, @Nullable PersistableBundle
+            persistentState) {
 
     }
 

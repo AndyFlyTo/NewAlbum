@@ -6,5 +6,6 @@ package com.example.chenchen.newapplication.album;
 
 public interface CurrentImageListener {
     public String getCurrentImage();
-
+    public int getCurrentId();
 }
+

@@ -18,10 +18,13 @@ import android.widget.ListView;
 
 import com.example.chenchen.newapplication.R;
 import com.example.chenchen.newapplication.album.Adapter.AlbumFolderAdapter;
+import com.example.chenchen.newapplication.album.Database.MyDatabaseHelper;
+import com.example.chenchen.newapplication.album.Database.MyDatabaseOperator;
 import com.example.chenchen.newapplication.album.ImageScanActivity;
 import com.example.chenchen.newapplication.album.MainActivity;
 import com.example.chenchen.newapplication.album.entity.AlbumFolderInfo;
 import com.example.chenchen.newapplication.album.imageloader.ImageLoaderWrapper;
+import com.example.chenchen.newapplication.tensorflow.Config;
 import com.example.chenchen.newapplication.tensorflow.ImageDealer;
 import com.nostra13.universalimageloader.utils.L;
 
@@ -62,10 +65,7 @@ public class AlbumFolderFragment extends Fragment implements AdapterView.OnItemC
         View rootView = inflater.inflate(R.layout.fragment_album_folder, container, false);
         folderListView = (ListView) rootView.findViewById(R.id.list_album);
         manager = getFragmentManager();
-        init();
-        AlbumFolderAdapter albumFolderAdapter = new AlbumFolderAdapter(getActivity(), albumFolderInfoList);
-        folderListView.setAdapter(albumFolderAdapter);
-        folderListView.setOnItemClickListener(this);
+
         return rootView;
     }
 
@@ -83,16 +83,26 @@ public class AlbumFolderFragment extends Fragment implements AdapterView.OnItemC
                     String url = folder.get(key);
 
                     count = ImageDealer.getFolderImageCount(getActivity(), key);
+
                     albumFolderInfo = new AlbumFolderInfo(key, count, url);
 //                    Log.d("chen", albumFolderInfo.toString());
                     albumFolderInfoList.add(albumFolderInfo);
-                    // }
+
                 }
                 break;
             }
 //        Log.d("chen","albumFolderInfoList size ="+albumFolderInfoList.size());
 
         }
+    }
+
+    @Override
+    public void onStart() {
+        init();
+        AlbumFolderAdapter albumFolderAdapter = new AlbumFolderAdapter(getActivity(), albumFolderInfoList);
+        folderListView.setAdapter(albumFolderAdapter);
+        folderListView.setOnItemClickListener(this);
+        super.onStart();
     }
 
     @Override
@@ -106,9 +116,6 @@ public class AlbumFolderFragment extends Fragment implements AdapterView.OnItemC
         Log.d("chen", "FolderFragment onDetach");
         super.onDetach();
     }
-
-
-
 
 
     //每一项的点击事件   listView.setOnclickListen(new Adapter.......)

@@ -1,13 +1,19 @@
 package com.example.chenchen.newapplication.album;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.content.ClipData;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -15,6 +21,7 @@ import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
@@ -23,6 +30,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -31,15 +39,30 @@ import android.widget.Toast;
 
 import com.example.chenchen.newapplication.BuildConfig;
 import com.example.chenchen.newapplication.R;
+import com.example.chenchen.newapplication.album.Database.MyDatabaseHelper;
+import com.example.chenchen.newapplication.album.Database.MyDatabaseOperator;
 import com.example.chenchen.newapplication.album.View.Fragment.AlbumFolderFragment;
 import com.example.chenchen.newapplication.album.View.Fragment.AlbumFragment;
+import com.example.chenchen.newapplication.tensorflow.Classifier;
+import com.example.chenchen.newapplication.tensorflow.Config;
+import com.example.chenchen.newapplication.tensorflow.ImageDealer;
+import com.example.chenchen.newapplication.tensorflow.TensorFlowImageClassifier;
 
 import java.io.File;
 import java.io.FileDescriptor;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+
+import static com.example.chenchen.newapplication.tensorflow.ImageDealer.do_tensorflow;
 
 public class MainActivity extends AppCompatActivity {
-
 
 
     public static ActionBar actionBar;
@@ -54,6 +77,9 @@ public class MainActivity extends AppCompatActivity {
     // for camera to save image
     private Uri content_uri;
     private File new_file;
+    private MyDatabaseHelper helper;
+    private Classifier classifier;
+    private String result;
 
 
     private static final int PERMISSION_CAMERA = 300;
@@ -63,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-            transaction=fragmentManager.beginTransaction();
+            transaction = fragmentManager.beginTransaction();
 
             switch (item.getItemId()) {
                 case R.id.navigation_home:
@@ -97,14 +123,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        actionBar=getSupportActionBar();
+        actionBar = getSupportActionBar();
         //没有左部返回键
         actionBar.setDisplayHomeAsUpEnabled(false);
         actionBar.setTitle("folder");
 
-        fragmentManager=getSupportFragmentManager();
-
-
+        fragmentManager = getSupportFragmentManager();
 
         navigation = (BottomNavigationView) findViewById(R.id.navigation);
 
@@ -124,24 +148,23 @@ public class MainActivity extends AppCompatActivity {
     //actionBar点击事件
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.action_camera:
                 if (Build.VERSION.SDK_INT >= 23) {
                     if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                            != PackageManager.PERMISSION_GRANTED ) {
+                            != PackageManager.PERMISSION_GRANTED) {
                         ActivityCompat.requestPermissions(this,
-                                new String[]{ Manifest.permission.CAMERA },
+                                new String[]{Manifest.permission.CAMERA},
                                 PERMISSION_CAMERA);
-                    }
-                    else {
+                    } else {
                         startCamera();
                     }
-                }
-                else {
+                } else {
                     startCamera();
                 }
                 break;
-            default:break;
+            default:
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -149,24 +172,32 @@ public class MainActivity extends AppCompatActivity {
     //使用Activity的onBackPressed()的代码覆盖
 
     /**
-     * 打开相机获取图片  需要在xml中创建xml文件 指名拍照照片的存储路径
+     * 打开相机获取图片  需要在xml中创建xml文件 指名拍照照片的存储路径   同时要跟新系统媒体库
      */
     private void startCamera() {
         File imagePath = new File(Environment.getExternalStorageDirectory(), "tmp");
-        if (!imagePath.exists()) imagePath.mkdirs();
+        if (!imagePath.exists())
+            imagePath.mkdirs();
+        //按照时间来存储
         new_file = new File(imagePath, "default_image.jpg");
         //第二参数是在manifest.xml定义 provider的authorities属性
+        //ContentProvider的子类FileProvider
+        //第二参数是在manifest.xml定义 provider的authorities属性
         //帮助我们将访问受限的 file:// URI 转化为可以授权共享的 content:// URI。
-        content_uri = FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID+".fileprovider", new_file);
+        content_uri = FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID + ".fileprovider", new_file);
+
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        //兼容版本处理，因为 intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION) 只在5.0以上的版本有效
+//        兼容版本处理，因为 intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION) 只在5.0以上的版本有效
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+
             ClipData clip = ClipData.newUri(getContentResolver(), "A photo", content_uri);
             intent.setClipData(clip);
             intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         } else {
+            //将存储图片的uri读写权限授权给剪裁工具应用
+            Log.d("chen", "----------------");
             List<ResolveInfo> resInfoList =
                     getPackageManager()
                             .queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
@@ -179,41 +210,161 @@ public class MainActivity extends AppCompatActivity {
 
         //将图片保存下来传给下面函数处理
         intent.putExtra(MediaStore.EXTRA_OUTPUT, content_uri);
-        startActivityForResult(intent, 1); //报错
+        startActivityForResult(intent, 1);
     }
+
+    // 接受拍照的结果
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == RESULT_OK) {
-            ContentResolver contentProvider = getContentResolver();
-            ParcelFileDescriptor mInputPFD;
-            try {
-                //获取contentProvider图片
-                mInputPFD = contentProvider.openFileDescriptor(content_uri, "r");
-                final FileDescriptor fileDescriptor = mInputPFD.getFileDescriptor();
+        if (requestCode == 1) {
+            if (resultCode == RESULT_OK) {
+                ContentResolver contentProvider = getContentResolver();
+                ParcelFileDescriptor mInputPFD;
+                try {
+                    //获取contentProvider图片
+                    mInputPFD = contentProvider.openFileDescriptor(content_uri, "r");
+                    final FileDescriptor fileDescriptor = mInputPFD.getFileDescriptor();
 
-                // new thread to deal image by tensorflow
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        dealPics(fileDescriptor);
-                    }
-                }).start();
-            } catch (Exception e) {
-                e.printStackTrace();
+                    // new thread to deal image by tensorflow
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            dealPics(fileDescriptor);
+                        }
+                    }).start();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
-    
-    
-    //对新拍的图片分类处理
+
+    // deal image by tensorflow
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void dealPics(FileDescriptor fileDescriptor) {
         Bitmap bitmap = BitmapFactory.decodeFileDescriptor(fileDescriptor);
+        // init tensorflow
+        if (classifier == null) {
+            try {
+                classifier = TensorFlowImageClassifier.create(getAssets(), Config.MODEL_FILE,
+                        Config.LABEL_FILE, Config.INPUT_SIZE, Config.IMAGE_MEAN,
+                        Config.IMAGE_STD, Config.INPUT_NAME, Config.OUTPUT_NAME);
 
-        // TODO: 18-4-30 调分类的接口，分类。 
+            } catch (final Exception e) {
+                Log.d("chen", "tensoflow error");
+            }
+        }
 
 
+        Bitmap newbm = ImageDealer.dealImageForTF(bitmap);
+        // get classifier information
+        result = do_tensorflow(newbm, classifier).get(0).getTitle();
+        Log.d("chen", "新图片result=" + result);
+        // call function to save image
+        String url = saveImage("", bitmap);
+        Log.d("chen","new_url="+url);
+
+        // update db
+        if (helper == null)
+            helper = new MyDatabaseHelper(MainActivity.this, Config.DB_NAME, null, Config.dbversion);
+        SQLiteDatabase db = helper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        values.put("folder_name", "temp");
+        values.put("url", url);
+        values.put("album_name", result);
+
+        db.insert("AlbumPhotos", null, values);
+        values.clear();
+
+        Cursor cursor = db.rawQuery("select folder_name from AlbumFolder where folder_name=?", new String[]{"temp"});
+        if (!cursor.moveToFirst()) {
+            Log.d("chen", "cursor==" + null);
+            values.put("folder_name", "temp");
+            values.put("image", url);
+            db.insert("AlbumFolder", null, values);
+            values.clear();
+        }
+        cursor.close();
+        db.close();
+
+        //  sendMessages("新的图片", String.valueOf(results), NOTI_CODE_NEW_PHOTO);
 
     }
+
+    // save image
+    private String saveImage(String type, Bitmap bitmap) {
+        FileOutputStream b = null;
+        // save images to this location
+        //注意这个位置
+        File file = new File(Config.Save_Location);
+        // 创建文件夹 @ Config.location
+        if (!file.exists()) {
+            Log.d("chen","file exit");
+            file.mkdirs();
+        }
+        String str = null;
+        Date date = null;
+        // 获取当前时间，进一步转化为字符串
+        SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
+        date = new Date();
+        str = format.format(date);
+        String fileName = Config.Save_Location + str + ".jpg";
+
+        try {
+            b = new FileOutputStream(fileName);
+
+            // 把数据写入文件
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, b);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+
+                b.flush();
+                b.close();
+                // reflash the fragment of Photos
+//                Config.workdone = false;
+//                photos.onReflash(fileName);
+//                Config.workdone = false;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                File imagePath = new File(Environment.getExternalStorageDirectory(), "tmp");
+                new_file = new File(imagePath, "default_image.jpg");
+                new_file.delete();
+                Log.d("chen", "Delete True");
+            } catch (Exception e) {
+                Log.e("chen", " delete Error");
+            }
+        }
+        return fileName;
+    }
+
+    private MediaScannerConnection mMediaonnection;
+
+    private void updateToMedia() {
+
+        try {
+            mMediaonnection = new MediaScannerConnection(MainActivity.this, new MediaScannerConnection.MediaScannerConnectionClient() {
+                @Override
+                public void onMediaScannerConnected() {
+//                    mMediaonnection.scanFile(SAMPLE_DEFAULT_DIR,filename);
+                }
+
+                @Override
+                public void onScanCompleted(String path, Uri uri) {
+                    mMediaonnection.disconnect();
+                }
+            });
+            mMediaonnection.connect();
+        } catch (Exception e) {
+
+        }
+    }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {

@@ -35,7 +35,7 @@ public class MyDatabaseOperator {
         return search(tableName, null);
     }
 
-    //return all data  use List<map>   注意有searchwhat  查询条件 where部分
+    //return all data  use List<map>  第二个参数 为要返回的列的名字
     public List<Map> search(String tableName, String searchWhat) {
         cursor = db.query(tableName, null, searchWhat, null, null, null, null);
 //        Log.d("chen", "查询条件" + searchWhat);
