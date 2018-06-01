@@ -56,13 +56,14 @@ public class AlbumDetailFragment extends Fragment implements AlbumGridAdapter.On
 
     }
 
-    @SuppressLint("ValidFragment")   //// TODO: 18-5-2  少了会写不了构造函数
+    //  少了会写不了构造函数
+    @SuppressLint("ValidFragment")
     public AlbumDetailFragment(String search_column_name, String type) {
         this.search_column_name = search_column_name;
         this.type = type;
     }
 
-    // TODO: 18-5-2   可以使用这种方式试一下。
+
     public static AlbumDetailFragment newInstance(List<String> albumInfo) {
         AlbumDetailFragment fragment = new AlbumDetailFragment();
         Bundle args = new Bundle();
@@ -74,9 +75,6 @@ public class AlbumDetailFragment extends Fragment implements AlbumGridAdapter.On
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        if (getArguments() != null) {
-//            albumInfoList = (List<String>) getArguments().getSerializable(ARG_PARAM1);
-//        }
     }
 
     //只是在layout中把背景设成了白色 ，不然是可以看到AlbumFragment的 , 怎么能看不见呢
@@ -97,7 +95,7 @@ public class AlbumDetailFragment extends Fragment implements AlbumGridAdapter.On
         if (type != null) {
             initImage(search_column_name);
             try {
-                // TODO: 18-5-2 返回键不管用
+
                 android.support.v7.app.ActionBar actionBar = MainActivity.actionBar;
                 actionBar.setHomeButtonEnabled(true);
                 actionBar.setDisplayHomeAsUpEnabled(true);
@@ -157,12 +155,6 @@ public class AlbumDetailFragment extends Fragment implements AlbumGridAdapter.On
         Log.d("chen","AlbumDetailFragment！！！！！onOPtionsItemSelected");
         switch (item.getItemId()) {
             case android.R.id.home:
-//                Log.d("chen","albumDetail home is exec");
-//                int num=getActivity().getSupportFragmentManager().getBackStackEntryCount();
-//                Log.d("chen","num="+num);
-//                FragmentManager.BackStackEntry backstatck = getActivity().getSupportFragmentManager().getBackStackEntryAt(0);
-//                Log.d("chen","backstack getname="+backstatck.getName());
-//                //fragment得不到返回键的监听事件
                 break;
         }
         return super.onOptionsItemSelected(item);

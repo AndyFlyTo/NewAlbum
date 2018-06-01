@@ -46,9 +46,6 @@ public class TensorFlowImageClassifier implements Classifier {
 
     private static final String TAG = "chen";
 
-    // Only return this many results with at least this confidence.
-    private static final int MAX_RESULTS = 3;
-    private static final float THRESHOLD = 0.1f;
 
     // Config values.
     private String inputName;
@@ -95,10 +92,9 @@ public class TensorFlowImageClassifier implements Classifier {
         c.inputName = inputName;
         c.outputName = outputName;
 
-        // Read the label names into memory.
-        // TODO(andrewharp): make this handle non-assets.
+
         String actualFilename = labelFilename.split("file:///android_asset/")[1];
-        Log.i(TAG, "Reading labels from: " + actualFilename);
+
         BufferedReader br = null;
         try {
             br = new BufferedReader(new InputStreamReader(assetManager.open(actualFilename)));
@@ -116,16 +112,12 @@ public class TensorFlowImageClassifier implements Classifier {
         // The shape of the output is [N, NUM_CLASSES], where N is the batch size.
         final Operation operation = c.inferenceInterface.graphOperation(outputName);
         final int numClasses = (int) operation.output(0).shape().size(1);
-        Log.i(TAG, "Read " + c.labels.size() + " labels, output layer size is " + numClasses);
 
-        // Ideally, inputSize could have been retrieved from the shape of the input operation.  Alas,
-        // the placeholder node for input in the graphdef typically used does not specify a shape, so it
-        // must be passed in as a parameter.
+
         c.inputSize = inputSize;
         c.imageMean = imageMean;
         c.imageStd = imageStd;
 
-        // Pre-allocate buffers.
         c.outputNames = new String[]{outputName};
         c.intValues = new int[inputSize * inputSize];
         c.floatValues = new float[inputSize * inputSize * 3];
@@ -134,46 +126,29 @@ public class TensorFlowImageClassifier implements Classifier {
         return c;
     }
 
-    //这里是重点
+
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @Override
     public List<Recognition> recognizeImage(final Bitmap bitmap) {
-        // Log this method so that it can be analyzed with systrace.
+   
         Trace.beginSection("recognizeImage");
 
         Trace.beginSection("preprocessBitmap");
-        // Preprocess the image data from 0-255 int to normalized float based
-        // on the provided parameters.
+
         //getPixels()函数把一张图片，从指定的偏移位置（offset），指定的位置（x,y）截取指定的宽高（width,height ），把所得图像的每个像素颜色转为int值，存入pixels。
         bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
         //这里no understand
         for (int i = 0; i < intValues.length; ++i) {
             final int val = intValues[i];
-//      floatValues[i * 3 + 0] = (((val >> 16) & 0xFF) - imageMean) / imageStd;
-//      floatValues[i * 3 + 1] = (((val >> 8) & 0xFF) - imageMean) / imageStd;
-//      floatValues[i * 3 + 2] = ((val & 0xFF) - imageMean) / imageStd;
+
             floatValues[i * 3 + 0] = ((val >> 16) & 0xFF);
             floatValues[i * 3 + 1] = ((val >> 8) & 0xFF);
             floatValues[i * 3 + 2] = (val & 0xFF);
         }
         Trace.endSection();
 
-        // Copy the input data into TensorFlow.
- /*   Trace.beginSection("fillNodeFloat");
-    inferenceInterface.fillNodeFloat(
-        inputName, new int[] {1, inputSize, inputSize, 3}, floatValues);
-    Trace.endSection();
 
-    // Run the inference call.
-    Trace.beginSection("runInference");
-    inferenceInterface.runInference(outputNames);
-    Trace.endSection();
 
-    // Copy the output Tensor back into the output array.
-    Trace.beginSection("readNodeFloat");
-    inferenceInterface.readNodeFloat(outputName, outputs);
-    //confident
-    Trace.endSection();*/
 
         Trace.beginSection("feed");
         inferenceInterface.feed(inputName, floatValues, 1, inputSize, inputSize, 3);
@@ -196,32 +171,7 @@ public class TensorFlowImageClassifier implements Classifier {
         recognitions.add(new Recognition("" + class_id, labels.get(class_id), null, null));
 
         return recognitions;
-/*
-    // Find the best classifications.
-    PriorityQueue<Recognition> pq = new PriorityQueue<Recognition>(3,
-        new Comparator<Recognition>() {
-          @Override
-          public int compare(Recognition lhs, Recognition rhs) {
-            // Intentionally reversed to put high confidence at the head of the queue.
-            return Float.compare(rhs.getConfidence(), lhs.getConfidence());
-          }
-        });
-    for (int i = 0; i < outputs.length; ++i) {
-      if (outputs[i] > THRESHOLD) {
-        // id title confident location
-        pq.add(new Recognition(
-            "" + i, labels.get(i), outputs[i], null));
-        ///label.get(i) is what   ??????why
-      }
-    }
-    final ArrayList<Recognition> recognitions = new ArrayList<Recognition>();
-    int recognitionsSize = Math.min(pq.size(), MAX_RESULTS);
-    for (int i = 0; i < recognitionsSize; ++i) {
-      recognitions.add(pq.poll());
-    }
-    Trace.endSection(); // "recognizeImage"
-    return recognitions;
-    */
+
     }
 
 
@@ -229,8 +179,8 @@ public class TensorFlowImageClassifier implements Classifier {
 
         int bestIdx = -1;
         float max = -1000;
-        // TODO: 18-5-2
-        Log.d("chen", "result");
+
+
         for (int i = 0; i < elems.length; i++) {
             Log.d("chen", elems[i] + "");
             float elem = elems[i];

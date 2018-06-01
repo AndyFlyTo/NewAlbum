@@ -8,7 +8,7 @@ import android.support.v4.app.LoaderManager;
 /**
  * 图片扫描Model层接口
  * <p/>
- * Created by Clock on 2016/3/19.
+ * Created by chenchen on 18-4-20.
  */
 public interface ImageScannerModel {
 
@@ -17,28 +17,24 @@ public interface ImageScannerModel {
      *
      * @param context
      * @param loaderManager
-//     * @param onScanImageFinish 扫描图片结束返回结果的回调接口
+     * @param onScanImageFinish 扫描图片结束返回结果的回调接口
      * @return
      */
-//    public void startScanImage(Context context, LoaderManager loaderManager, OnScanImageFinish onScanImageFinish);
 
     public void startScanImage(Context context,LoaderManager loaderManager,OnScanImageFinish onScanImageFinish);
     /**
      * 归档整理相册信息
-     *
-//     * @param imageScanResult
+     * @param imageScanResult
      * @return 整理好的相册目录信息
      */
-//    public AlbumViewData archiveAlbumInfo(Context context, ImageScanResult imageScanResult);
-//
-//    /**
-//     * 图片扫描结果回调接口
-//     */
+
+    /**
+    * 图片扫描结果回调接口
+     */
     public static interface OnScanImageFinish {
 
         /**
          * 扫描结束的时候执行此函数
-         *
          * @param imageScanResult 返回扫描结果，不存在图片则返回null
          */
         public void onFinish(ImageScanResult imageScanResult);

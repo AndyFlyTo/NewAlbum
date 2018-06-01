@@ -7,7 +7,7 @@ import java.io.File;
 /**
  * 图片加载功能接口
  * <p/>
- * Created by Clock on 2016/1/18.
+ * Created by chenchen on 18-4-20.
  */
 public interface ImageLoaderWrapper {
 

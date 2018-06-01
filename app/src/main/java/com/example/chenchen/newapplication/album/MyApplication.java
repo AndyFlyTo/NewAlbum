@@ -13,7 +13,9 @@ public class MyApplication extends Application {
 
         public void onCreate() {
             super.onCreate();
+            //facebook
             Stetho.initializeWithDefaults(this);
+            //加载图片库初始化
             UniversalAndroidImageLoader.init(getApplicationContext());
         }
 }

@@ -3,7 +3,7 @@ package com.example.chenchen.newapplication.album.imageloader;
 /**
  * ImageLoader工厂类
  * <p/>
- * Created by Clock on 2016/1/18.
+ * Created by chenchen on 18-5-2.
  */
 public class ImageLoaderFactory {
 
@@ -22,7 +22,8 @@ public class ImageLoaderFactory {
         if (sInstance == null) {
             synchronized (ImageLoaderFactory.class) {
                 if (sInstance == null) {
-                    sInstance = new UniversalAndroidImageLoader();//<link>https://github.com/nostra13/Android-Universal-Image-Loader</link>
+                    sInstance = new UniversalAndroidImageLoader();
+                    //<link>https://github.com/nostra13/Android-Universal-Image-Loader</link>
                 }
             }
         }

@@ -40,7 +40,6 @@ public class AlbumAdapter extends ArrayAdapter<AlbumInfo> {
 
         if (convertView == null) {
             holder = new ViewHolder();
-            // TODO: 18-5-2  
             convertView = LayoutInflater.from(getContext()).inflate(resourceId, null);
             holder.img = (ImageView) convertView.findViewById(R.id.album_image);
             holder.tv = (TextView) convertView.findViewById(R.id.album_name);
@@ -50,11 +49,8 @@ public class AlbumAdapter extends ArrayAdapter<AlbumInfo> {
             holder = (ViewHolder)convertView.getTag();
         }
         holder.tv.setText(album.getAlbum_name());
-//        Log.d("chen","adapter album_name="+album.getAlbum_name());
         String url = album.getUrl();
-//        Log.d("chen","adapter album_url="+url);
 
-        // TODO: 18-5-2  url==null 加载失败
         Glide
                 .with(context)
                 .load(url) //
@@ -62,7 +58,7 @@ public class AlbumAdapter extends ArrayAdapter<AlbumInfo> {
                 .placeholder(R.drawable.loading)
                 .error(R.drawable.error)
                 .crossFade()
-                .transform(new GlideRoundTransform(context))  //转变图圆角 // TODO: 18-5-2
+                .transform(new GlideRoundTransform(context))  //转变图圆角
                 .thumbnail(0.1f).into(holder.img);
         return convertView;
     }

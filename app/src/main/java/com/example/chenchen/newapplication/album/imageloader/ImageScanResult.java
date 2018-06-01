@@ -16,7 +16,7 @@ public class ImageScanResult {
     private Map<String,ArrayList<String>> albumInfo;
 
     public void setAlbumInfo(Map<String, ArrayList<String>> albumInfo) {
-//        Log.d("chen","setAlbumInfo");
+
         this.albumInfo = albumInfo;
     }
 

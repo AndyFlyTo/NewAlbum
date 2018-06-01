@@ -1,7 +1,6 @@
 package com.example.chenchen.newapplication.album.Adapter;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -16,7 +15,7 @@ import java.util.List;
 /**
  * 相册目录适配器
  * <p/>
- * Created by Clock on 2016/1/17.
+ * Created by chenchen on 2018/4/30.
  */
 public class AlbumFolderAdapter extends BaseAdapter {
 
@@ -64,8 +63,7 @@ public class AlbumFolderAdapter extends BaseAdapter {
         AlbumFolderInfo albumFolderInfo = albumFolderInfoList.get(position);
 
         String url=albumFolderInfo.getUrl();
-//        Log.d("chen","url="+url);
-//        String url=albumInfoList.get(position);
+
 
         Glide
                 .with(context)
@@ -79,17 +77,9 @@ public class AlbumFolderAdapter extends BaseAdapter {
         String folderName = albumFolderInfo.getName();
         holder.tvDirectoryName.setText(folderName);
 
-//        List<AlbumInfo> imageInfoList = albumFolderInfo.getImageInfoList();
         holder.tvChildCount.setText(albumFolderInfo.getCount()+"");
 
         return convertView;
-
-
-//        File frontCover = albumFolderInfo.getFrontCover();
-//        ImageLoaderWrapper.DisplayOption displayOption = new ImageLoaderWrapper.DisplayOption();
-//        displayOption.loadingResId = R.mipmap.img_default;
-//        displayOption.loadErrorResId = R.mipmap.img_error;
-//        mImageLoaderWrapper.displayImage(holder.ivAlbumCover, frontCover, displayOption);
 
 
     }

@@ -112,11 +112,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
     };
-//    //隐藏所有Fragment
-//    private void hideAllFragment(android.app.FragmentTransaction fragmentTransaction){
-//        if(albumFolderFragment != null)fragmentTransaction.hide(albumFolderFragment);
-//        if(albumDetailFragment != null)fragmentTransaction.hide(albumDetailFragment);
-//    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -169,7 +164,6 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    //使用Activity的onBackPressed()的代码覆盖
 
     /**
      * 打开相机获取图片  需要在xml中创建xml文件 指名拍照照片的存储路径   同时要跟新系统媒体库
@@ -258,14 +252,14 @@ public class MainActivity extends AppCompatActivity {
 
 
         Bitmap newbm = ImageDealer.dealImageForTF(bitmap);
-        // get classifier information
+        // 得到分类结果
         result = do_tensorflow(newbm, classifier).get(0).getTitle();
-        Log.d("chen", "新图片result=" + result);
-        // call function to save image
+
+        // 存储图片
         String url = saveImage("", bitmap);
         Log.d("chen","new_url="+url);
 
-        // update db
+        // 更新数据库
         if (helper == null)
             helper = new MyDatabaseHelper(MainActivity.this, Config.DB_NAME, null, Config.dbversion);
         SQLiteDatabase db = helper.getWritableDatabase();
@@ -289,7 +283,6 @@ public class MainActivity extends AppCompatActivity {
         cursor.close();
         db.close();
 
-        //  sendMessages("新的图片", String.valueOf(results), NOTI_CODE_NEW_PHOTO);
 
     }
 
@@ -297,7 +290,6 @@ public class MainActivity extends AppCompatActivity {
     private String saveImage(String type, Bitmap bitmap) {
         FileOutputStream b = null;
         // save images to this location
-        //注意这个位置
         File file = new File(Config.Save_Location);
         // 创建文件夹 @ Config.location
         if (!file.exists()) {
@@ -324,10 +316,6 @@ public class MainActivity extends AppCompatActivity {
 
                 b.flush();
                 b.close();
-                // reflash the fragment of Photos
-//                Config.workdone = false;
-//                photos.onReflash(fileName);
-//                Config.workdone = false;
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -351,7 +339,7 @@ public class MainActivity extends AppCompatActivity {
             mMediaonnection = new MediaScannerConnection(MainActivity.this, new MediaScannerConnection.MediaScannerConnectionClient() {
                 @Override
                 public void onMediaScannerConnected() {
-//                    mMediaonnection.scanFile(SAMPLE_DEFAULT_DIR,filename);
+
                 }
 
                 @Override

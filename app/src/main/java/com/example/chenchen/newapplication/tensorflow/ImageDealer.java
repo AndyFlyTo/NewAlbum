@@ -85,16 +85,16 @@ public class ImageDealer {
         }
 
         List<Map> findResult;
-        //Recognition is a Class
         for (Classifier.Recognition cr : results) {
             String type = cr.getTitle();
             // AlbumPhotos
             value.clear();
-            value.put("album_name", type);   //// TODO: 18-5-2  in this album_name==tf_type 
+            value.put("album_name", type);
             Log.d("chen", "album_name" + type);
             value.put("url", url);
             value.put("tf_type", type);
-            value.put("folder_name", "Download"); //// TODO: 18-5-2 暂时先处理download下面的
+            //暂时处理的是download文件夹下的
+            value.put("folder_name", "Download");
             value.put("confidence", cr.getConfidence());  //null
             operator.insert("AlbumPhotos", value);
 
@@ -106,33 +106,18 @@ public class ImageDealer {
                 value.put("image", url);
                 operator.insert("Album", value);
             }
-            //TFInfromation
-//            value.clear();
-//            value.put("url", image);
-//            value.put("tf_type", type);
-//            value.put("confidence", cr.getConfidence());
-//            operator.insert("TFInformation", value);
-            //不要关数据库
+
         }
     }
 
-    //暂时插入无法分类的图片信息
-    public static void InsertImageInfoDB(MyDatabaseOperator operator, ContentValues values) {
 
-    }
 
-    public static void insertImageFolderIntoDB(MyDatabaseOperator operator, ContentValues value) {
-
-        operator.insert("AlbumFolder", value);
-
-    }
 
     public static List<Map<String, String>> getAlbumInfo(Context ctx) {
         List<Map<String, String>> result = new ArrayList<>();
         Config.dbHelper = new MyDatabaseHelper(ctx, "Album.db", null, Config.dbversion);
 
         SQLiteDatabase db = Config.dbHelper.getWritableDatabase();
-        Log.d("chen", "getAlbumInfo");
         Cursor cursor = db.query("Album", null, null, null, null, null, null);
         Log.d("chen", "cursor size=" + cursor.getCount());
         if (cursor == null)
@@ -157,14 +142,6 @@ public class ImageDealer {
         return result;
     }
 
-    //转到operator 此时有一个数据库操作的实例 不用这个方法
-//    public static List<String> getAllFolderName(Context context){
-//        List<String> result = new ArrayList<>();
-//        Config.dbHelper = new MyDatabaseHelper(context, "Album.db", null, Config.dbversion);
-//        SQLiteDatabase db = Config.dbHelper.getWritableDatabase();
-//    }
-    //查询某一类别或者文件夹下 所有的图片
-//    Cursor c = db.rawQuery("select * from user where username=? and password = ?",
     public static List<String> getImageInfo(Context ctx, String column_name, String type) {
         List<String> result = new ArrayList<>();
         Config.dbHelper = new MyDatabaseHelper(ctx, "Album.db", null, Config.dbversion);
@@ -178,12 +155,6 @@ public class ImageDealer {
 
             do {
                 result.add(cursor.getString(0));
-//                String album_name = cursor.getString(cursor.getColumnIndex("album_name"));
-//                String url = cursor.getString(cursor.getColumnIndex("url"));
-//                tmp.put("album_name", album_name);
-//                tmp.put("image", url);
-//                result.add(tmp);
-//                Log.d("ITEM", String.valueOf(tmp));
             } while (cursor.moveToNext());
         }
         cursor.close();
@@ -226,9 +197,7 @@ public class ImageDealer {
                 count++;
             } while (cursor.moveToNext());
         }
-//        Log.d("chen",folder+"有图片"+count);
 
-        // TODO: 18-5-3  cursor未关闭 
         cursor.close();
         db.close();
         return count;
@@ -236,20 +205,19 @@ public class ImageDealer {
 
 
     /**
-     * use tf to classify the image
+     * 使用tf训练的模型对图像进行分类
      *
      * @param bitmap
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public static List<Classifier.Recognition>
     do_tensorflow(Bitmap bitmap, Classifier classifier) {
-        // resize image
+        // 对图像初始化处理
         Bitmap newbm = dealImageForTF(bitmap);
-        // get results
+        // 得到分类结果
         try {
             return classifier.recognizeImage(newbm);
         } catch (Exception e) {
-            Log.d("TF-ERROR", "1");
             return null;
         }
     }

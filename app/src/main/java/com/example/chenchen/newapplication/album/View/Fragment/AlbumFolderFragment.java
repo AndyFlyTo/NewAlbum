@@ -40,14 +40,6 @@ import java.util.Set;
 
 public class AlbumFolderFragment extends Fragment implements AdapterView.OnItemClickListener {
 
-//    public static AlbumFolderFragment newInstance(List<AlbumFolderInfo> albumFolderInfoList) {
-//        AlbumFolderFragment fragment = new AlbumFolderFragment();
-//        Bundle args = new Bundle();
-//        args.putSerializable(ARG_PARAM1, (Serializable) albumFolderInfoList);
-//        fragment.setArguments(args);
-//        return fragment;
-//    }
-
     private ListView folderListView;
     private List<AlbumFolderInfo> albumFolderInfoList;
     private AlbumFolderInfo albumFolderInfo;
@@ -85,13 +77,13 @@ public class AlbumFolderFragment extends Fragment implements AdapterView.OnItemC
                     count = ImageDealer.getFolderImageCount(getActivity(), key);
 
                     albumFolderInfo = new AlbumFolderInfo(key, count, url);
-//                    Log.d("chen", albumFolderInfo.toString());
+
                     albumFolderInfoList.add(albumFolderInfo);
 
                 }
                 break;
             }
-//        Log.d("chen","albumFolderInfoList size ="+albumFolderInfoList.size());
+
 
         }
     }
@@ -128,7 +120,8 @@ public class AlbumFolderFragment extends Fragment implements AdapterView.OnItemC
             AlbumDetailFragment fragment = new AlbumDetailFragment("folder_name", type);
             ft = manager.beginTransaction();
             ft.add(R.id.content, fragment);
-            ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN); //设置动画和效果
+            //设置动画和效果
+            ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
             try {
                 android.support.v7.app.ActionBar actionBar = MainActivity.actionBar;
                 actionBar.setDisplayHomeAsUpEnabled(true);
@@ -136,7 +129,8 @@ public class AlbumFolderFragment extends Fragment implements AdapterView.OnItemC
             } catch (Exception e) {
                 ;
             }
-            ft.addToBackStack(null);//将fragment加入回退栈
+            //将fragment加入回退栈
+            ft.addToBackStack(null);
             ft.commit();
         }
     }

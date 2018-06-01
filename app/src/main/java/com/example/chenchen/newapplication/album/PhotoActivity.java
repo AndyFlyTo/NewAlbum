@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 
-/**
+/** 图像分类
  * Created by chenchen on 18-4-30.
  */
 
@@ -42,7 +42,7 @@ public class PhotoActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // TODO: 18-4-25
+
         setContentView(R.layout.activity_photo);
         inferenceInterface = new TensorFlowInferenceInterface(getAssets(),MODEL_FILE);
         Log.d(TAG,"model loaded successfully");
@@ -75,19 +75,12 @@ public class PhotoActivity extends AppCompatActivity {
             int[] intValues = new int[inputSize * inputSize]; // array to copy values from Bitmap image
             float[] floatValues = new float[inputSize * inputSize * 3]; // float array to store image data
 
-            // note: Both intValues and floatValues are flattened arrays
 
             //get pixel values from bitmap image and store it in intValues
             bitmap_scaled.getPixels(intValues, 0, bitmap_scaled.getWidth(), 0, 0, bitmap_scaled.getWidth(), bitmap_scaled.getHeight());
             Log.d("chen","bitmap");
             for (int i = 0; i < intValues.length; ++i) {
                 final int val = intValues[i];
-                /*
-                preprocess image if required
-                floatValues[i * 3 + 0] = (((val >> 16) & 0xFF) - imageMean) / imageStd;
-                floatValues[i * 3 + 1] = (((val >> 8) & 0xFF) - imageMean) / imageStd;
-                floatValues[i * 3 + 2] = ((val & 0xFF) - imageMean) / imageStd;
-                */
 
                 // convert from 0-255 range to floating point value
                 floatValues[i * 3 + 0] = ((val >> 16) & 0xFF);
@@ -114,11 +107,10 @@ public class PhotoActivity extends AppCompatActivity {
             inferenceInterface.fetch(OUTPUT_NODE,result);
             Trace.endSection();
             ////inferenceInterface.readNodeFloat(OUTPUT_NODE, result);
-            // find the class with highest probability
+            // 得到可能性最大的分类结果
             int class_id=argmax(result);
-            Log.d("chen","class_id="+class_id);
+
             TextView textView=(TextView) findViewById(R.id.result);
-            // Setting the class name in the UI
             textView.setText(classes[class_id]);
 
         } catch (IOException e) {
@@ -132,7 +124,6 @@ public class PhotoActivity extends AppCompatActivity {
 
         int bestIdx = -1;
         float max = -1000;
-        Log.d("chen","result");
         for (int i = 0; i < elems.length; i++) {
             Log.d("chen",elems[i]+"");
             float elem = elems[i];

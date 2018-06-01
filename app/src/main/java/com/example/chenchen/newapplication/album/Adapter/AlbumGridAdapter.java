@@ -85,30 +85,6 @@ public class AlbumGridAdapter extends BaseAdapter {
                 .crossFade()
                 .thumbnail(0.1f).into(holder.albumItem);
 
-        // TODO: 18-5-2
-        /*
-        ImageInfo imageInfo = mImageInfoList.get(position);
-        ImageLoaderWrapper.DisplayOption displayOption = new ImageLoaderWrapper.DisplayOption();
-        displayOption.loadingResId = R.mipmap.img_default;
-        displayOption.loadErrorResId = R.mipmap.img_error;
-        mImageLoaderWrapper.displayImage(holder.albumItem, imageInfo.getImageFile(), displayOption);
-*/
-//        holder.imageSelectedCheckBox.setChecked(imageInfo.isSelected());
-//        if (mImageOnSelectedListener == null) {
-//            mImageOnSelectedListener = new CompoundButton.OnCheckedChangeListener() {
-//
-//                @Override
-//                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-//                    ImageInfo imageInfo = (ImageInfo) buttonView.getTag();
-//                    imageInfo.setIsSelected(isChecked);
-//                    if (mImageChooseView != null) {
-//                        mImageChooseView.refreshSelectedCounter(imageInfo);
-//                    }
-//                }
-//            };
-//        }
-//        holder.imageSelectedCheckBox.setTag(imageInfo);
-//        holder.imageSelectedCheckBox.setOnCheckedChangeListener(mImageOnSelectedListener);//监听图片是否被选中的状态
 
         if (onClickListener == null) {
             onClickListener = new View.OnClickListener() {
@@ -140,10 +116,7 @@ public class AlbumGridAdapter extends BaseAdapter {
          * 显示图片的位置
          */
         ImageView albumItem;
-        /**
-         * 图片选择按钮
-         */
-//        CheckBox imageSelectedCheckBox;
+
     }
 
     /**

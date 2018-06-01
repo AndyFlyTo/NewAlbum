@@ -18,26 +18,18 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.view.animation.AnimationUtils;
-import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.bumptech.glide.Glide;
 import com.example.chenchen.newapplication.R;
 import com.example.chenchen.newapplication.album.Database.MyDatabaseHelper;
-import com.example.chenchen.newapplication.album.Database.MyDatabaseOperator;
-import com.example.chenchen.newapplication.album.imageloader.ImageScan;
 import com.example.chenchen.newapplication.tensorflow.Config;
-import com.nostra13.universalimageloader.cache.disc.naming.HashCodeFileNameGenerator;
-import com.nostra13.universalimageloader.utils.L;
 
 import java.io.Serializable;
 import java.util.List;
@@ -68,7 +60,7 @@ public class ImageScanActivity extends AppCompatActivity implements View.OnClick
     private View mFooterView;
     private int imageIndex;
     private ImageView image_delete;
-//    private CheckBox mImageSelectedBox;
+
     MyDatabaseHelper helper;
 
     /**
@@ -84,7 +76,6 @@ public class ImageScanActivity extends AppCompatActivity implements View.OnClick
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_image_preview);
         actionBar = getSupportActionBar();
         //没有左部返回键
@@ -97,21 +88,15 @@ public class ImageScanActivity extends AppCompatActivity implements View.OnClick
                 @Override
                 public void onSystemUiVisibilityChange(int visibility) {
                     if (View.SYSTEM_UI_FLAG_VISIBLE == visibility) {//此处需要添加顶部和底部消失和出现的动画效果
-                        Log.d(TAG, "SYSTEM_UI_FLAG_VISIBLE");
-//                        mHeaderView.startAnimation(AnimationUtils.loadAnimation(ImagePreviewActivity.this, R.anim.top_enter_anim));
                         mFooterView.startAnimation(AnimationUtils.loadAnimation(ImageScanActivity.this, R.anim.bottom_enter_anim));
-//
+
                     } else {
-                        Log.i(TAG, "SYSTEM_UI_FLAG_INVISIBLE");
-//                        mHeaderView.startAnimation(AnimationUtils.loadAnimation(ImageScanActivity.this, R.anim.top_exit_anim));
                         mFooterView.startAnimation(AnimationUtils.loadAnimation(ImageScanActivity.this, R.anim.bottom_exit_anim));
-//
                     }
                 }
             });
         }
 
-//        mImageLoaderWrapper = ImageLoaderFactory.getLoader();
 
         mPreviewImageInfo = (String) getIntent().getSerializableExtra(EXTRA_IMAGE_INFO);
         mPreviewImageInfoList = (List<String>) getIntent().getSerializableExtra(EXTRA_IMAGE_INFO_LIST);
@@ -145,7 +130,7 @@ public class ImageScanActivity extends AppCompatActivity implements View.OnClick
                     intent.putExtra("image_url", imageListener.getCurrentImage());
                 startActivity(intent);
                 break;
-            
+
             default:
                 break;
         }
@@ -155,7 +140,7 @@ public class ImageScanActivity extends AppCompatActivity implements View.OnClick
     private void initView() {
 
         // TODO: 18-5-7 index暂时不需要
-//        mTitleView = (TextView) findViewById(R.id.tv_title);
+
         if (mPreviewImageInfo != null && mPreviewImageInfoList != null) {
             if (mPreviewImageInfoList.contains(mPreviewImageInfo)) {
                 imageIndex = mPreviewImageInfoList.indexOf(mPreviewImageInfo);
@@ -165,10 +150,7 @@ public class ImageScanActivity extends AppCompatActivity implements View.OnClick
         }
 
         image_delete= (ImageView) findViewById(R.id.image_delete);
-        if (mPreviewImageInfo != null) {
-//            mImageSelectedBox.setChecked(mPreviewImageInfo.isSelected());
-        }
-//        mImageSelectedBox.setOnCheckedChangeListener(this);
+
         image_delete.setOnClickListener(this);
 
         mPreviewViewPager = (ViewPager) findViewById(R.id.gallery_viewpager);
@@ -183,9 +165,7 @@ public class ImageScanActivity extends AppCompatActivity implements View.OnClick
         mPreviewChangeListener = new PreviewChangeListener();
         mPreviewViewPager.addOnPageChangeListener(mPreviewChangeListener);
 
-//        findViewById(R.id.iv_back).setOnClickListener(this);
 
-//        mHeaderView = findViewById(R.id.header_view);
         mFooterView = findViewById(R.id.footer_view);
     }
 
@@ -222,9 +202,9 @@ public class ImageScanActivity extends AppCompatActivity implements View.OnClick
                             } else
                                 mPreviewViewPager.setCurrentItem(imageId);
 
-                            // TODO: 18-5-20 如果删除的是最后一个 弹出
+                            // 如果删除的是最后一个 弹出
                             Log.d("chen", "current index =" + imageId);
-                            //// TODO: 18-5-20如果目录下仅有一张照片且被删除，此时还要更新文件夹相册 
+                            //如果目录下仅有一张照片且被删除，此时还要更新文件夹相册
 
                             updateMediaImage(url);
                         }
@@ -261,14 +241,6 @@ public class ImageScanActivity extends AppCompatActivity implements View.OnClick
         super.onBackPressed();
     }
 
-//    @Override
-//    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-//        if (buttonView == mImageSelectedBox) {
-//            int currentPosition = mPreviewViewPager.getCurrentItem();
-//            ImageInfo imageInfo = mPreviewImageInfoList.get(currentPosition);
-//            imageInfo.setIsSelected(isChecked);
-//        }
-//    }
 
     /**
      * 监听PhotoView的点击事件
@@ -312,7 +284,6 @@ public class ImageScanActivity extends AppCompatActivity implements View.OnClick
             Glide
                     .with(ImageScanActivity.this)
                     .load(image_url)
-//                    .centerCrop()
                     .placeholder(R.drawable.loading)
                     .error(R.drawable.error)
                     .crossFade()
@@ -345,9 +316,6 @@ public class ImageScanActivity extends AppCompatActivity implements View.OnClick
             Log.d("chen", "onPageSelected");
             Log.d("chen", "position is =" + position);
 
-//            mImageSelectedBox.setOnCheckedChangeListener(null);//先反注册监听，避免重复更新选中的状态
-
-//            setPositionToTitle(position);
             String imageInfo = mPreviewImageInfoList.get(position);
 
             imageListener = new CurrentImageListener() {
@@ -362,9 +330,6 @@ public class ImageScanActivity extends AppCompatActivity implements View.OnClick
                 }
             };
 
-//            mImageSelectedBox.setChecked(imageInfo.isSelected());
-
-//            mImageSelectedBox.setOnCheckedChangeListener(ImagePreviewActivity.this);
         }
 
         @Override

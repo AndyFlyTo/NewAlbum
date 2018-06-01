@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by Clock on 2016/3/21.
+ * Created by chenchen on 18-4-20.
  */
 public class ImageScannerModelImpl implements ImageScannerModel {
 
@@ -66,7 +66,7 @@ public class ImageScannerModelImpl implements ImageScannerModel {
     @Override
     public void startScanImage(Context context, LoaderManager loaderManager, OnScanImageFinish onScanImageFinish) {
         mOnScanImageFinish = onScanImageFinish;
-        //// TODO: 18-5-1 don't forget
+
         LoaderManager.LoaderCallbacks<Cursor> loaderCallbacks = new LoaderManager.LoaderCallbacks<Cursor>() {
             @Override
             public Loader<Cursor> onCreateLoader(int id, Bundle args) {
@@ -78,9 +78,6 @@ public class ImageScannerModelImpl implements ImageScannerModel {
 
             @Override
             public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-//                Log.i(TAG, "-----onLoadFinished-----");
-//                Log.d("chen","IMAGE_PROJECTION length="+IMAGE_PROJECTION.length);
-//                Log.d("chen","data is"+data);
                 Log.d("chen","data count="+data.getCount());
                 if (data.getCount() == 0) {
                     if (onScanImageFinish != null) {
@@ -123,44 +120,15 @@ public class ImageScannerModelImpl implements ImageScannerModel {
                             albumImageList = new ArrayList<>();
                             result.put(folder_name, albumImageList);
                         }
-                        albumImageList.add(columnValue);//添加到对应的相册目录下面
+                        //添加到对应的相册目录下面
+                        albumImageList.add(columnValue);
 
 
-//                    // TODO: 18-4-29   return data is here !!!!!!!!!!
-//                    //在这返回
-//                        item.put("folder", folder_name);
-
-//                        result.add(item);
-
-//                        if (!albumFolderList.contains(albumFolder)) {
-//                            albumFolderList.add(albumFolder);
-//                            Log.d("chen","albumFolder="+albumFolder);
-//                        }
-
-                        // Log.d("chen","albumPath="+albumPath);
-//                        ArrayList<File> albumImageFiles = albumImageListMap.get(albumPath);
-//                        if (albumImageFiles == null) {
-//                            albumImageFiles = new ArrayList<>();
-//                            albumImageListMap.put(albumPath, albumImageFiles);
-//                        }
-//                        albumImageFiles.add(imageFile);//添加到对应的相册目录下面
                     }
 
                     ImageScanResult imageScanResult = new ImageScanResult();
                     imageScanResult.setAlbumInfo(result);
 
-                    //sortByFileLastModified(albumFolderList);//对图片目录做排序
-
-//                    Set<String> keySet = result.keySet();
-//                    for (String key : keySet) {//对图片目录下所有的图片文件做排序
-//                        ArrayList<String> albumImageList = result.get(key);
-                        //  sortByFileLastModified(albumImageList);
-//                    }
-
-
-//
-//                    //Fix CursorLoader Bug
-//                    //http://stackoverflow.com/questions/7746140/android-problems-using-fragmentactivity-loader-to-update-fragmentstatepagera
                     Message message = mRefreshHandler.obtainMessage();
                     message.obj = imageScanResult;
                     mRefreshHandler.sendMessage(message);
@@ -175,172 +143,6 @@ public class ImageScannerModelImpl implements ImageScannerModel {
         };
         loaderManager.initLoader(IMAGE_LOADER_ID, null, loaderCallbacks);//初始化指定id的Loader
     }
-
-
-//
-//    @Override
-//    public void startScanImage(final Context context, LoaderManager loaderManager, final OnScanImageFinish onScanImageFinish) {
-//        mOnScanImageFinish = onScanImageFinish;
-//        LoaderManager.LoaderCallbacks<Cursor> loaderCallbacks = new LoaderManager.LoaderCallbacks<Cursor>() {
-//            @Override
-//            public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-//                Log.i(TAG, "-----onCreateLoader-----");
-//                CursorLoader imageCursorLoader = new CursorLoader(context, MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-//                        IMAGE_PROJECTION, null, null, MediaStore.Images.Media.DEFAULT_SORT_ORDER);
-//                return imageCursorLoader;
-//            }
-//
-//            @Override
-//            public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-////                Log.i(TAG, "-----onLoadFinished-----");
-////                Log.d("chen","IMAGE_PROJECTION length="+IMAGE_PROJECTION.length);
-////                Log.d("chen","data is"+data);
-//                if (data.getCount() == 0) {
-//                    if (onScanImageFinish != null) {
-//                        onScanImageFinish.onFinish(null);//无图片直接返回null
-//                    }
-//
-//                } else {
-//                    int dataColumnIndex = data.getColumnIndex(MediaStore.Images.Media.DATA);
-//                    Log.d("chen","dataColumnIndex="+dataColumnIndex);
-//                    Log.d("chen","media...data="+ MediaStore.Images.Media.DATA);   //_data
-//                    Log.d("chen","media...title="+ MediaStore.Images.Media.TITLE);  //title
-//                    Log.d("chen","media...display_name="+ MediaStore.Images.Media.DISPLAY_NAME); //_display_name
-//                    //int displayNameColumnIndex = data.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME);
-//                    //int titleColumnIndex = data.getColumnIndex(MediaStore.Images.Media.TITLE);
-//                    ArrayList<File> albumFolderList = new ArrayList<>();
-//                    HashMap<String, ArrayList<File>> albumImageListMap = new HashMap<>();
-//                    while (data.moveToNext()) {
-//                        File imageFile = new File(data.getString(dataColumnIndex));//图片文件
-//                        File albumFolder = imageFile.getParentFile();//图片目录
-//                        if (!albumFolderList.contains(albumFolder)) {
-//                            albumFolderList.add(albumFolder);
-//                            Log.d("chen","albumFolder="+albumFolder);
-//                        }
-//                        String albumPath = albumFolder.getAbsolutePath();   //绝对路径
-//                       // Log.d("chen","albumPath="+albumPath);
-//                        ArrayList<File> albumImageFiles = albumImageListMap.get(albumPath);
-//                        if (albumImageFiles == null) {
-//                            albumImageFiles = new ArrayList<>();
-//                            albumImageListMap.put(albumPath, albumImageFiles);
-//                        }
-//                        albumImageFiles.add(imageFile);//添加到对应的相册目录下面
-//                    }
-//
-//                    sortByFileLastModified(albumFolderList);//对图片目录做排序
-//
-//                    Set<String> keySet = albumImageListMap.keySet();
-//                    for (String key : keySet) {//对图片目录下所有的图片文件做排序
-//                        ArrayList<File> albumImageList = albumImageListMap.get(key);
-//                        sortByFileLastModified(albumImageList);
-//                    }
-////
-////                    ImageScanResult imageScanResult = new ImageScanResult();
-////                    imageScanResult.setAlbumFolderList(albumFolderList);
-////                    // TODO: 18-4-29   return data is here !!!!!!!!!!
-////                    //在这返回
-////                    imageScanResult.setAlbumImageListMap(albumImageListMap);
-////
-////                    //Fix CursorLoader Bug
-////                    //http://stackoverflow.com/questions/7746140/android-problems-using-fragmentactivity-loader-to-update-fragmentstatepagera
-////                    Message message = mRefreshHandler.obtainMessage();
-////                    message.obj = imageScanResult;
-////                    mRefreshHandler.sendMessage(message);
-//
-//                }
-//
-//            }
-//
-//            @Override
-//            public void onLoaderReset(Loader<Cursor> loader) {
-//                Log.i(TAG, "-----onLoaderReset-----");
-//            }
-//        };
-//        loaderManager.initLoader(IMAGE_LOADER_ID, null, loaderCallbacks);//初始化指定id的Loader
-//    }
-//
-//    @Override
-//    public AlbumViewData archiveAlbumInfo(Context context, ImageScanResult imageScanResult) {
-//        if (imageScanResult != null) {
-//
-//            List<File> albumFolderList = imageScanResult.getAlbumFolderList();
-//            Map<String, ArrayList<File>> albumImageListMap = imageScanResult.getAlbumImageListMap();
-//
-//            if (albumFolderList != null && albumFolderList.size() > 0 && albumImageListMap != null) {
-//
-//                List<AlbumFolderInfo> albumFolderInfoList = new ArrayList<>();
-//
-//                AlbumFolderInfo allImageFolder = createAllImageAlbum(context, albumImageListMap);
-//                if (allImageFolder != null) {
-//                    albumFolderInfoList.add(allImageFolder);
-//                }
-//
-//                int albumFolderSize = albumFolderList.size();
-//                for (int albumFolderPos = 0; albumFolderPos < albumFolderSize; albumFolderPos++) {
-//
-//                    File albumFolder = albumFolderList.get(albumFolderPos);
-//                    AlbumFolderInfo albumFolderInfo = new AlbumFolderInfo();
-//
-//                    String folderName = albumFolder.getName();
-//                    albumFolderInfo.setFolderName(folderName);
-//
-//                    String albumPath = albumFolder.getAbsolutePath();
-//                    List<File> albumImageList = albumImageListMap.get(albumPath);
-//                    File frontCover = albumImageList.get(0);
-//                    albumFolderInfo.setFrontCover(frontCover);//设置首张图片
-//
-//                    List<ImageInfo> imageInfoList = ImageInfo.buildFromFileList(albumImageList);
-//                    albumFolderInfo.setImageInfoList(imageInfoList);
-//                    allImageFolder.getImageInfoList().addAll(imageInfoList);//保存到 "全部图片" 目录下
-//
-//                    albumFolderInfoList.add(albumFolderInfo);
-//                }
-//
-//                AlbumViewData albumViewData = new AlbumViewData();
-//                albumViewData.setAlbumFolderInfoList(albumFolderInfoList);
-//
-//                return albumViewData;
-//            }
-//
-//            return null;
-//        } else {
-//            return null;
-//        }
-//    }
-
-    /**
-     * 创建一个"全部图片"目录
-     *
-     * @param albumImageListMap
-     * @return
-     */
-//    private AlbumFolderInfo createAllImageAlbum(Context context, Map<String, ArrayList<File>> albumImageListMap) {
-//        if (albumImageListMap != null) {
-//            AlbumFolderInfo albumFolderInfo = new AlbumFolderInfo();
-//            albumFolderInfo.setFolderName(context.getString(R.string.all_image));//设置目录名
-//
-//            List<ImageInfo> totalImageInfoList = new ArrayList<>();
-//            albumFolderInfo.setImageInfoList(totalImageInfoList);//设置所有的图片文件
-//
-//            boolean isFirstAlbum = true; //是否是第一个目录
-//
-//            Set<String> albumKeySet = albumImageListMap.keySet();
-//            for (String albumKey : albumKeySet) {//每个目录的图片
-//                List<File> albumImageList = albumImageListMap.get(albumKey);
-//
-//                if (isFirstAlbum == true) {
-//                    File frontCover = albumImageList.get(0);
-//                    albumFolderInfo.setFrontCover(frontCover);//设置第一张图片
-//
-//                    isFirstAlbum = false;
-//                }
-//            }
-//
-//            return albumFolderInfo;
-//        } else {
-//            return null;
-//        }
-//    }
 
 
     /**

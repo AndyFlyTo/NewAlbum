@@ -5,7 +5,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 import android.widget.Toast;
-
+/**
+ * Created by chenchen on 18-4-30.
+ */
 
 
 public class MyDatabaseHelper extends SQLiteOpenHelper {

@@ -81,8 +81,6 @@ public class ClassiedOnePictureActivity extends AppCompatActivity {
             if (result == null&&image.contains("tmp")) {
 
                 if (classifier == null) {
-                    Log.d("chen", "classied one picture  classifier==null");
-                    // get permission
                     try {
                         classifier = TensorFlowImageClassifier.create(getAssets(), Config.MODEL_FILE,
                                 Config.LABEL_FILE, Config.INPUT_SIZE, Config.IMAGE_MEAN,

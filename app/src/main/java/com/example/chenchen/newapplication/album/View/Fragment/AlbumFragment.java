@@ -45,7 +45,7 @@ public class AlbumFragment extends Fragment {
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Log.d("chen","AlbumFragment");  //GridList
+         //GridList
         View view = inflater.inflate(R.layout.fragment_album,container,false);
         initAlbums();
         GridView listView = (GridView) view.findViewById(R.id.album_list);
@@ -55,13 +55,9 @@ public class AlbumFragment extends Fragment {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v,
                                     int position, long id) {
-//                Log.d("chen","进入每一分类页面,this is a fragment");
-//                System.out.println(position+ " " +id);
-                // 进入一个新的fregment，这个fregment就是photos.java
-                // photos.java中显示具体相册的具体照片
-                //创建新的photos对象，初始数值qq暂时没有用， 可以定义为相册id等，但是需要进一步修改
+
                 String type = result.get(position).get("album_name");
-//                Log.d("Album_Name", type);
+
                 AlbumDetailFragment fragment=new AlbumDetailFragment("album_name",type);
                 ft = manager.beginTransaction();
                 ft.add(R.id.content , fragment);
@@ -73,7 +69,8 @@ public class AlbumFragment extends Fragment {
                 } catch (Exception e) {
                     ;
                 }
-                ft.addToBackStack( null);//将fragment加入回退栈
+                //将fragment加入回退栈
+                ft.addToBackStack( null);
                 ft.commit();
             }
         });
